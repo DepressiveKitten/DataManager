@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace FileCabinetApp
 {
@@ -6,6 +7,7 @@ namespace FileCabinetApp
     {
         private const string DeveloperName = "Dmitriy Lopatin";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
+        private const string OutputDateFormat = "yyyy-MMM-d";
         private const int CommandHelpIndex = 0;
         private const int DescriptionHelpIndex = 1;
         private const int ExplanationHelpIndex = 2;
@@ -18,6 +20,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("exit", Exit),
             new Tuple<string, Action<string>>("stat", Stat),
             new Tuple<string, Action<string>>("create", Create),
+            new Tuple<string, Action<string>>("list", List),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -26,6 +29,7 @@ namespace FileCabinetApp
             new string[] { "exit", "exits the application", "The 'exit' command exits the application." },
             new string[] { "stat", "shows statistics about service", "The 'stat' command shows statistics about service." },
             new string[] { "create", "create a new record", "The 'create' command create a new record." },
+            new string[] { "list", "show all records", "The 'list' command show all records." },
         };
 
         private static FileCabinetService fileCabinetService;
@@ -50,7 +54,7 @@ namespace FileCabinetApp
                     continue;
                 }
 
-                var index = Array.FindIndex(commands, 0, commands.Length, i => i.Item1.Equals(command, StringComparison.InvariantCultureIgnoreCase));
+                var index = Array.FindIndex(commands, 0, commands.Length, i => i.Item1.Equals(command, StringComparison.OrdinalIgnoreCase));
                 if (index >= 0)
                 {
                     const int parametersIndex = 1;
@@ -75,7 +79,7 @@ namespace FileCabinetApp
         {
             if (!string.IsNullOrEmpty(parameters))
             {
-                var index = Array.FindIndex(helpMessages, 0, helpMessages.Length, i => string.Equals(i[Program.CommandHelpIndex], parameters, StringComparison.InvariantCultureIgnoreCase));
+                var index = Array.FindIndex(helpMessages, 0, helpMessages.Length, i => string.Equals(i[Program.CommandHelpIndex], parameters, StringComparison.OrdinalIgnoreCase));
                 if (index >= 0)
                 {
                     Console.WriteLine(helpMessages[index][Program.ExplanationHelpIndex]);
@@ -121,6 +125,26 @@ namespace FileCabinetApp
             else
             {
                 Console.Write("Date format should be mm/dd/yyyy");
+            }
+
+            Console.WriteLine();
+        }
+
+        private static void List(string parameters)
+        {
+            var list = fileCabinetService.GetRecords();
+            if (list.Length == 0)
+            {
+                Console.WriteLine("No records yet");
+            }
+            else
+            {
+                int i = 0;
+                foreach (var record in list)
+                {
+                    i++;
+                    Console.WriteLine("#{0}, {1}, {2}, {3}", i, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+                }
             }
 
             Console.WriteLine();
