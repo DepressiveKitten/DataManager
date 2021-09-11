@@ -17,6 +17,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("help", PrintHelp),
             new Tuple<string, Action<string>>("exit", Exit),
             new Tuple<string, Action<string>>("stat", Stat),
+            new Tuple<string, Action<string>>("create", Create),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -24,6 +25,7 @@ namespace FileCabinetApp
             new string[] { "help", "prints the help screen", "The 'help' command prints the help screen." },
             new string[] { "exit", "exits the application", "The 'exit' command exits the application." },
             new string[] { "stat", "shows statistics about service", "The 'stat' command shows statistics about service." },
+            new string[] { "create", "create a new record", "The 'create' command create a new record." },
         };
 
         private static FileCabinetService fileCabinetService;
@@ -100,6 +102,28 @@ namespace FileCabinetApp
         {
             var recordsCount = Program.fileCabinetService.GetStat();
             Console.WriteLine($"{recordsCount} record(s).");
+        }
+
+        private static void Create(string parameters)
+        {
+            Console.Write("First name: ");
+            string firstName = Console.ReadLine();
+            Console.Write("Last name: ");
+            string lastName = Console.ReadLine();
+            Console.Write("Date of birth: ");
+            var date = Console.ReadLine().Split('/');
+            int day, month, year;
+            if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
+            {
+                fileCabinetService.CreateRecord(firstName, lastName, new DateTime(year, month, day));
+                Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
+            }
+            else
+            {
+                Console.Write("Date format should be mm/dd/yyyy");
+            }
+
+            Console.WriteLine();
         }
 
         private static void Exit(string parameters)
