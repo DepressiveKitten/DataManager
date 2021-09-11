@@ -116,18 +116,39 @@ namespace FileCabinetApp
             string lastName = Console.ReadLine();
             Console.Write("Date of birth: ");
             var date = Console.ReadLine().Split('/');
+            Console.Write("Height: ");
+            var height = Console.ReadLine();
+            Console.Write("Salary: ");
+            string salary = Console.ReadLine();
+            Console.Write("Grade: ");
+            var grade = Console.ReadLine();
             int day, month, year;
+            short parsedHeight;
+            decimal parsedSalary;
+            if (!decimal.TryParse(salary, out parsedSalary))
+            {
+                Console.Write("input valid salary");
+            }
+
+            if (!short.TryParse(height, out parsedHeight))
+            {
+                Console.Write("input valid height");
+            }
+
+            if (grade.Length > 1)
+            {
+                Console.Write("Grade should contain one letter or digit");
+            }
+
             if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
             {
-                fileCabinetService.CreateRecord(firstName, lastName, new DateTime(year, month, day));
+                fileCabinetService.CreateRecord(firstName, lastName, new DateTime(year, month, day), parsedHeight, parsedSalary, grade[0]);
                 Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
             }
             else
             {
                 Console.Write("Date format should be mm/dd/yyyy");
             }
-
-            Console.WriteLine();
         }
 
         private static void List(string parameters)
@@ -143,7 +164,8 @@ namespace FileCabinetApp
                 foreach (var record in list)
                 {
                     i++;
-                    Console.WriteLine("#{0}, {1}, {2}, {3}", i, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+                    Console.Write("#{0}, {1}, {2}, {3},", i, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+                    Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
                 }
             }
 
