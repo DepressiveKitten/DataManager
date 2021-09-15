@@ -11,6 +11,7 @@ namespace FileCabinetApp
         private const int CommandHelpIndex = 0;
         private const int DescriptionHelpIndex = 1;
         private const int ExplanationHelpIndex = 2;
+        private static readonly DateTime MinDate = new DateTime(1950, 1, 1);
 
         private static bool isRunning = true;
 
@@ -20,6 +21,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("exit", Exit),
             new Tuple<string, Action<string>>("stat", Stat),
             new Tuple<string, Action<string>>("create", Create),
+            new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("list", List),
         };
 
@@ -29,6 +31,7 @@ namespace FileCabinetApp
             new string[] { "exit", "exits the application", "The 'exit' command exits the application." },
             new string[] { "stat", "shows statistics about service", "The 'stat' command shows statistics about service." },
             new string[] { "create", "create a new record", "The 'create' command create a new record." },
+            new string[] { "edit", "edit existing record", "The 'edit' edit existing record, should contain wanted Id." },
             new string[] { "list", "show all records", "The 'list' command show all records." },
         };
 
@@ -108,47 +111,143 @@ namespace FileCabinetApp
             Console.WriteLine($"{recordsCount} record(s).");
         }
 
+        private static bool InputName(out string name)
+        {
+            name = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(name) || name.Length < 2 || name.Length > 60)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool InputDate(out DateTime dateOfBirth)
+        {
+            var date = Console.ReadLine().Split('/');
+            int day, month, year;
+            if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
+            {
+                try
+                {
+                    dateOfBirth = new DateTime(year, month, day);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    dateOfBirth = DateTime.MinValue;
+                    return false;
+                }
+
+                if (dateOfBirth < MinDate || dateOfBirth > DateTime.Now)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            dateOfBirth = DateTime.MinValue;
+            return false;
+        }
+
+        private static bool InputHeight(out short height)
+        {
+            var str = Console.ReadLine();
+            if (!short.TryParse(str, out height))
+            {
+                return false;
+            }
+
+            if (height < 100 || height > 220)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool InputSalary(out decimal salary)
+        {
+            var str = Console.ReadLine();
+            if (!decimal.TryParse(str, out salary))
+            {
+                return false;
+            }
+
+            if (salary < 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool InputGrade(out char grade)
+        {
+            var str = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(str) || str.Length > 1)
+            {
+                grade = ' ';
+                return false;
+            }
+
+            grade = str[0];
+
+            if (!char.IsLetter(grade))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private static void Create(string parameters)
         {
             Console.Write("First name: ");
-            string firstName = Console.ReadLine();
+            string firstName;
+            while (!InputName(out firstName))
+            {
+                Console.WriteLine("First name should contain from 2 to 60 symbols");
+            }
+
             Console.Write("Last name: ");
-            string lastName = Console.ReadLine();
+            string lastName;
+            while (!InputName(out lastName))
+            {
+                Console.WriteLine("Last name should contain from 2 to 60 symbols");
+            }
+
             Console.Write("Date of birth: ");
-            var date = Console.ReadLine().Split('/');
+            DateTime date;
+            while (!InputDate(out date))
+            {
+                Console.WriteLine("Date format should be mm/dd/yyyy");
+            }
+
             Console.Write("Height: ");
-            var height = Console.ReadLine();
+            short height;
+            while (!InputHeight(out height))
+            {
+                Console.WriteLine("Enter a valid height");
+            }
+
             Console.Write("Salary: ");
-            string salary = Console.ReadLine();
+            decimal salary;
+            while (!InputSalary(out salary))
+            {
+                Console.WriteLine("Enter a valid salary");
+            }
+
             Console.Write("Grade: ");
-            var grade = Console.ReadLine();
-            int day, month, year;
-            short parsedHeight;
-            decimal parsedSalary;
-            if (!decimal.TryParse(salary, out parsedSalary))
+            char grade;
+            while (!InputGrade(out grade))
             {
-                Console.Write("input valid salary");
+                Console.WriteLine("Grade should contain one letter");
             }
 
-            if (!short.TryParse(height, out parsedHeight))
-            {
-                Console.Write("input valid height");
-            }
-
-            if (grade.Length > 1)
-            {
-                Console.Write("Grade should contain one letter or digit");
-            }
-
-            if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
-            {
-                fileCabinetService.CreateRecord(firstName, lastName, new DateTime(year, month, day), parsedHeight, parsedSalary, grade[0]);
-                Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
-            }
-            else
-            {
-                Console.Write("Date format should be mm/dd/yyyy");
-            }
+            fileCabinetService.CreateRecord(firstName, lastName, date, height, salary, grade);
+            Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
         }
 
         private static void List(string parameters)
@@ -164,12 +263,79 @@ namespace FileCabinetApp
                 foreach (var record in list)
                 {
                     i++;
-                    Console.Write("#{0}, {1}, {2}, {3},", i, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+                    Console.Write("#{0}) {1}, {2}, {3},", i, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
                     Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
                 }
             }
 
             Console.WriteLine();
+        }
+
+        private static void Edit(string parameters)
+        {
+            int id;
+            if (!int.TryParse(parameters, out id))
+            {
+                Console.WriteLine("Wrong argument");
+                return;
+            }
+
+            FileCabinetRecord record = fileCabinetService.GetRecord(id);
+            if (record is null)
+            {
+                Console.WriteLine("#{0} record is not found.", id);
+                return;
+            }
+
+            Console.Write("#{0}) {1}, {2}, {3},", record.Id, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+            Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
+
+            Console.WriteLine("Enter new valid arguments to change them or anything else to leave them");
+
+            Console.Write("First name: ");
+            string firstName;
+            if (!InputName(out firstName))
+            {
+                firstName = record.FirstName;
+            }
+
+            Console.Write("Last name: ");
+            string lastName;
+            if (!InputName(out lastName))
+            {
+                lastName = record.LastName;
+            }
+
+            Console.Write("Date of birth: ");
+            DateTime date;
+            if (!InputDate(out date))
+            {
+                date = record.DateOfBirth;
+            }
+
+            Console.Write("Height: ");
+            short height;
+            if (!InputHeight(out height))
+            {
+                height = record.Height;
+            }
+
+            Console.Write("Salary: ");
+            decimal salary;
+            if (!InputSalary(out salary))
+            {
+                salary = record.Salary;
+            }
+
+            Console.Write("Grade: ");
+            char grade;
+            if (!InputGrade(out grade))
+            {
+                grade = record.Grade;
+            }
+
+            fileCabinetService.EditRecord(id, firstName, lastName, date, height, salary, grade);
+            Console.WriteLine("Record #{0} is updated.", id);
         }
 
         private static void Exit(string parameters)
