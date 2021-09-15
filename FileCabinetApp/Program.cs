@@ -137,7 +137,7 @@ namespace FileCabinetApp
 
             if (grade.Length > 1)
             {
-                Console.Write("Grade should contain one letter or digit");
+                Console.Write("Grade should contain one letter");
             }
 
             if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
