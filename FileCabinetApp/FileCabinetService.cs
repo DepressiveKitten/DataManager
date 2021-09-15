@@ -5,10 +5,41 @@ namespace FileCabinetApp
 {
     public class FileCabinetService
     {
+        private static readonly DateTime MinDate = new DateTime(1950, 1, 1);
         private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
 
         public int CreateRecord(string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
         {
+            if (string.IsNullOrWhiteSpace(firstName) || firstName.Length < 2 || firstName.Length > 60)
+            {
+                throw new ArgumentException("first name should contain from 2 to 60 symbols", nameof(firstName));
+            }
+
+            if (string.IsNullOrWhiteSpace(lastName) || lastName.Length < 2 || lastName.Length > 60)
+            {
+                throw new ArgumentException("last name should contain from 2 to 60 symbols", nameof(lastName));
+            }
+
+            if (dateOfBirth < MinDate || dateOfBirth > DateTime.Now)
+            {
+                throw new ArgumentException("Enter a valid date", nameof(dateOfBirth));
+            }
+
+            if (height < 100 || height > 220)
+            {
+                throw new ArgumentException("Enter a valid height", nameof(height));
+            }
+
+            if (salary < 0)
+            {
+                throw new ArgumentException("salary should be positive", nameof(salary));
+            }
+
+            if (!char.IsLetter(grade))
+            {
+                throw new ArgumentException("grade should conrain one letter", nameof(grade));
+            }
+
             var record = new FileCabinetRecord
             {
                 Id = this.list.Count + 1,
