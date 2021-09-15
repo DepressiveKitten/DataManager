@@ -21,6 +21,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("exit", Exit),
             new Tuple<string, Action<string>>("stat", Stat),
             new Tuple<string, Action<string>>("create", Create),
+            new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("list", List),
         };
 
@@ -30,6 +31,7 @@ namespace FileCabinetApp
             new string[] { "exit", "exits the application", "The 'exit' command exits the application." },
             new string[] { "stat", "shows statistics about service", "The 'stat' command shows statistics about service." },
             new string[] { "create", "create a new record", "The 'create' command create a new record." },
+            new string[] { "edit", "edit existing record", "The 'edit' edit existing record, should contain wanted Id." },
             new string[] { "list", "show all records", "The 'list' command show all records." },
         };
 
@@ -267,6 +269,73 @@ namespace FileCabinetApp
             }
 
             Console.WriteLine();
+        }
+
+        private static void Edit(string parameters)
+        {
+            int id;
+            if (!int.TryParse(parameters, out id))
+            {
+                Console.WriteLine("Wrong argument");
+                return;
+            }
+
+            FileCabinetRecord record = fileCabinetService.GetRecord(id);
+            if (record is null)
+            {
+                Console.WriteLine("#{0} record is not found.", id);
+                return;
+            }
+
+            Console.Write("#{0}) {1}, {2}, {3},", record.Id, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+            Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
+
+            Console.WriteLine("Enter new valid arguments to change them or anything else to leave them");
+
+            Console.Write("First name: ");
+            string firstName;
+            if (!InputName(out firstName))
+            {
+                firstName = record.FirstName;
+            }
+
+            Console.Write("Last name: ");
+            string lastName;
+            if (!InputName(out lastName))
+            {
+                lastName = record.LastName;
+            }
+
+            Console.Write("Date of birth: ");
+            DateTime date;
+            if (!InputDate(out date))
+            {
+                date = record.DateOfBirth;
+            }
+
+            Console.Write("Height: ");
+            short height;
+            if (!InputHeight(out height))
+            {
+                height = record.Height;
+            }
+
+            Console.Write("Salary: ");
+            decimal salary;
+            if (!InputSalary(out salary))
+            {
+                salary = record.Salary;
+            }
+
+            Console.Write("Grade: ");
+            char grade;
+            if (!InputGrade(out grade))
+            {
+                grade = record.Grade;
+            }
+
+            fileCabinetService.EditRecord(id, firstName, lastName, date, height, salary, grade);
+            Console.WriteLine("Record #{0} is updated.", id);
         }
 
         private static void Exit(string parameters)
