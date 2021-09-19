@@ -22,6 +22,7 @@ namespace FileCabinetApp
         {
             new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
             new Tuple<string, Func<string, FileCabinetRecord[]>>("lastname", fileCabinetService.FindByLastName),
+            new Tuple<string, Func<string, FileCabinetRecord[]>>("dateofbirth", fileCabinetService.FindByDate),
         };
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
@@ -377,6 +378,7 @@ namespace FileCabinetApp
                     PrintRecordData(record);
                 }
             }
+
             Console.WriteLine();
         }
 
