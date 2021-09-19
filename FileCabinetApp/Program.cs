@@ -21,6 +21,7 @@ namespace FileCabinetApp
         private static Tuple<string, Func<string, FileCabinetRecord[]>>[] findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
         {
             new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
+            new Tuple<string, Func<string, FileCabinetRecord[]>>("lastname", fileCabinetService.FindByLastName),
         };
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
