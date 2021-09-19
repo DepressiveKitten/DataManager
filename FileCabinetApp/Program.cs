@@ -11,9 +11,17 @@ namespace FileCabinetApp
         private const int CommandHelpIndex = 0;
         private const int DescriptionHelpIndex = 1;
         private const int ExplanationHelpIndex = 2;
+        private const int ParametersIndex = 1;
+        private const int CommandIndex = 0;
         private static readonly DateTime MinDate = new DateTime(1950, 1, 1);
+        private static FileCabinetService fileCabinetService = new FileCabinetService();
 
         private static bool isRunning = true;
+
+        private static Tuple<string, Func<string, FileCabinetRecord[]>>[] findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
+        {
+            new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
+        };
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
         {
@@ -23,6 +31,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("create", Create),
             new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("list", List),
+            new Tuple<string, Action<string>>("find", Find),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -33,13 +42,11 @@ namespace FileCabinetApp
             new string[] { "create", "create a new record", "The 'create' command create a new record." },
             new string[] { "edit", "edit existing record", "The 'edit' edit existing record, should contain wanted Id." },
             new string[] { "list", "show all records", "The 'list' command show all records." },
+            new string[] { "find", "find record by parameters", "Type parametr you want to search for after 'find' command." },
         };
-
-        private static FileCabinetService fileCabinetService;
 
         public static void Main(string[] args)
         {
-            fileCabinetService = new FileCabinetService();
             Console.WriteLine($"File Cabinet Application, developed by {Program.DeveloperName}");
             Console.WriteLine(Program.HintMessage);
             Console.WriteLine();
@@ -48,8 +55,7 @@ namespace FileCabinetApp
             {
                 Console.Write("> ");
                 var inputs = Console.ReadLine().Split(' ', 2);
-                const int commandIndex = 0;
-                var command = inputs[commandIndex];
+                var command = inputs[CommandIndex];
 
                 if (string.IsNullOrEmpty(command))
                 {
@@ -60,8 +66,7 @@ namespace FileCabinetApp
                 var index = Array.FindIndex(commands, 0, commands.Length, i => i.Item1.Equals(command, StringComparison.OrdinalIgnoreCase));
                 if (index >= 0)
                 {
-                    const int parametersIndex = 1;
-                    var parameters = inputs.Length > 1 ? inputs[parametersIndex] : string.Empty;
+                    var parameters = inputs.Length > 1 ? inputs[ParametersIndex] : string.Empty;
                     commands[index].Item2(parameters);
                 }
                 else
@@ -109,6 +114,7 @@ namespace FileCabinetApp
         {
             var recordsCount = Program.fileCabinetService.GetStat();
             Console.WriteLine($"{recordsCount} record(s).");
+            Console.WriteLine();
         }
 
         private static bool InputName(out string name)
@@ -248,6 +254,13 @@ namespace FileCabinetApp
 
             fileCabinetService.CreateRecord(firstName, lastName, date, height, salary, grade);
             Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
+            Console.WriteLine();
+        }
+
+        private static void PrintRecordData(FileCabinetRecord record)
+        {
+            Console.Write("#{0}) {1}, {2}, {3},", record.Id, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
+            Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
         }
 
         private static void List(string parameters)
@@ -259,12 +272,9 @@ namespace FileCabinetApp
             }
             else
             {
-                int i = 0;
                 foreach (var record in list)
                 {
-                    i++;
-                    Console.Write("#{0}) {1}, {2}, {3},", i, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
-                    Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
+                    PrintRecordData(record);
                 }
             }
 
@@ -287,8 +297,7 @@ namespace FileCabinetApp
                 return;
             }
 
-            Console.Write("#{0}) {1}, {2}, {3},", record.Id, record.FirstName, record.LastName, record.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo));
-            Console.WriteLine(" Salary: {0:F3}, Height: {1}, Grade: {2}", record.Salary, record.Height, record.Grade);
+            PrintRecordData(record);
 
             Console.WriteLine("Enter new valid arguments to change them or anything else to leave them");
 
@@ -336,6 +345,38 @@ namespace FileCabinetApp
 
             fileCabinetService.EditRecord(id, firstName, lastName, date, height, salary, grade);
             Console.WriteLine("Record #{0} is updated.", id);
+            Console.WriteLine();
+        }
+
+        private static void Find(string parameters)
+        {
+            var arguments = parameters.Split(' ', 2);
+            var index = Array.FindIndex(findOptions, i => i.Item1.Equals(arguments[CommandIndex], StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                Console.WriteLine($"There is no such parameter as '{arguments[CommandIndex]}'");
+                return;
+            }
+
+            if (arguments.Length < 2)
+            {
+                Console.WriteLine($"Your argument should follow '{arguments[CommandIndex]}' param");
+                return;
+            }
+
+            FileCabinetRecord[] findRecords = findOptions[index].Item2(arguments[ParametersIndex]);
+            if (findRecords.Length == 0)
+            {
+                Console.WriteLine($"No records was found");
+            }
+            else
+            {
+                foreach (var record in findRecords)
+                {
+                    PrintRecordData(record);
+                }
+            }
+            Console.WriteLine();
         }
 
         private static void Exit(string parameters)
