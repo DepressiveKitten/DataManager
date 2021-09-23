@@ -4,5 +4,29 @@
         <name>FileCabinetApp</name>
     </assembly>
     <members>
+        <member name="M:FileCabinetApp.FileCabinetService.CreateRecord(System.String,System.String,System.DateTime,System.Int16,System.Decimal,System.Char)">
+            <summary>
+            Create a new record and adds it to the list.
+            </summary>
+            <param name="firstName">The first that stored in record.</param>
+            <param name="lastName">The last that stored in record.</param>
+            <param name="dateOfBirth">Person's date of birth.</param>
+            <param name="height">Person's height.</param>
+            <param name="salary">Person's salary.</param>
+            <param name="grade">Person's grade.</param>
+            <returns>Id of added record.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.EditRecord(System.Int32,System.String,System.String,System.DateTime,System.Int16,System.Decimal,System.Char)">
+            <summary>
+            Create a new record and adds it to the list.
+            </summary>
+            <param name="id">Id of record you want to edit.</param>
+            <param name="firstName">The first that stored in record.</param>
+            <param name="lastName">The last that stored in record.</param>
+            <param name="dateOfBirth">Person's date of birth.</param>
+            <param name="height">Person's height.</param>
+            <param name="salary">Person's salary.</param>
+            <param name="grade">Person's grade.</param>
+        </member>
     </members>
 </doc>
