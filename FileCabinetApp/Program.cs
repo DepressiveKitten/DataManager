@@ -13,7 +13,7 @@ namespace FileCabinetApp
         private const int ExplanationHelpIndex = 2;
         private const int ParametersIndex = 1;
         private const int CommandIndex = 0;
-        private static readonly DateTime MinDate = new DateTime(1950, 1, 1);
+        private static readonly DateTime MinimalValidDate = new DateTime(1950, 1, 1);
         private static FileCabinetService fileCabinetService = new FileCabinetService();
 
         private static bool isRunning = true;
@@ -75,6 +75,8 @@ namespace FileCabinetApp
                 {
                     PrintMissedCommandInfo(command);
                 }
+
+                Console.WriteLine();
             }
             while (isRunning);
         }
@@ -82,7 +84,6 @@ namespace FileCabinetApp
         private static void PrintMissedCommandInfo(string command)
         {
             Console.WriteLine($"There is no '{command}' command.");
-            Console.WriteLine();
         }
 
         private static void PrintHelp(string parameters)
@@ -108,15 +109,12 @@ namespace FileCabinetApp
                     Console.WriteLine("\t{0}\t- {1}", helpMessage[Program.CommandHelpIndex], helpMessage[Program.DescriptionHelpIndex]);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private static void Stat(string parameters)
         {
             var recordsCount = Program.fileCabinetService.GetStat();
             Console.WriteLine($"{recordsCount} record(s).");
-            Console.WriteLine();
         }
 
         private static bool InputName(out string name)
@@ -146,7 +144,7 @@ namespace FileCabinetApp
                     return false;
                 }
 
-                if (dateOfBirth < MinDate || dateOfBirth > DateTime.Now)
+                if (dateOfBirth < MinimalValidDate || dateOfBirth > DateTime.Now)
                 {
                     return false;
                 }
@@ -256,7 +254,6 @@ namespace FileCabinetApp
 
             fileCabinetService.CreateRecord(firstName, lastName, date, height, salary, grade);
             Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
-            Console.WriteLine();
         }
 
         private static void PrintRecordData(FileCabinetRecord record)
@@ -279,8 +276,6 @@ namespace FileCabinetApp
                     PrintRecordData(record);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private static void Edit(string parameters)
@@ -347,7 +342,6 @@ namespace FileCabinetApp
 
             fileCabinetService.EditRecord(id, firstName, lastName, date, height, salary, grade);
             Console.WriteLine("Record #{0} is updated.", id);
-            Console.WriteLine();
         }
 
         private static void Find(string parameters)
@@ -378,8 +372,6 @@ namespace FileCabinetApp
                     PrintRecordData(record);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private static void Exit(string parameters)

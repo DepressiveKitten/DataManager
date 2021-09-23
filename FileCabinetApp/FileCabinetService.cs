@@ -6,11 +6,11 @@ namespace FileCabinetApp
 {
     public class FileCabinetService
     {
-        private static readonly DateTime MinDate = new DateTime(1950, 1, 1);
-        private static StringComparer dictionaryComparer = StringComparer.OrdinalIgnoreCase;
-        private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
-        private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(dictionaryComparer);
-        private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(dictionaryComparer);
+        private static readonly DateTime MinimalValidDate = new DateTime(1950, 1, 1);
+        private static readonly StringComparer DictionaryComparer = StringComparer.OrdinalIgnoreCase;
+        private readonly List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
+        private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
+        private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
 
         public int CreateRecord(string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
@@ -19,7 +19,7 @@ namespace FileCabinetApp
 
             var record = new FileCabinetRecord
             {
-                Id = this.list.Count + 1,
+                Id = this.recordsList.Count + 1,
                 FirstName = firstName,
                 LastName = lastName,
                 DateOfBirth = dateOfBirth,
@@ -28,41 +28,17 @@ namespace FileCabinetApp
                 Grade = grade,
             };
 
-            this.list.Add(record);
-
-            if (this.firstNameDictionary.ContainsKey(firstName))
-            {
-                this.firstNameDictionary[firstName].Add(record);
-            }
-            else
-            {
-                this.firstNameDictionary[firstName] = new List<FileCabinetRecord>() { record };
-            }
-
-            if (this.lastNameDictionary.ContainsKey(lastName))
-            {
-                this.lastNameDictionary[lastName].Add(record);
-            }
-            else
-            {
-                this.lastNameDictionary[lastName] = new List<FileCabinetRecord>() { record };
-            }
-
-            if (this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
-            {
-                this.dateOfBirthDictionary[dateOfBirth].Add(record);
-            }
-            else
-            {
-                this.dateOfBirthDictionary[dateOfBirth] = new List<FileCabinetRecord>() { record };
-            }
+            this.recordsList.Add(record);
+            this.AddByFirstNameToDictionary(firstName, record);
+            this.AddBySecondNameToDictionary(lastName, record);
+            this.AddByDateOfBirthToDictionary(dateOfBirth, record);
 
             return record.Id;
         }
 
         public void EditRecord(int id, string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
         {
-            FileCabinetRecord record = this.list.Find((FileCabinetRecord record) => record.Id == id);
+            FileCabinetRecord record = this.recordsList.Find((FileCabinetRecord record) => record.Id == id);
             if (record is null)
             {
                 throw new ArgumentException(id + " record is not existing", nameof(id));
@@ -73,40 +49,19 @@ namespace FileCabinetApp
             if (!string.Equals(record.FirstName, firstName, StringComparison.OrdinalIgnoreCase))
             {
                 this.firstNameDictionary[record.FirstName].Remove(record);
-                if (this.firstNameDictionary.ContainsKey(firstName))
-                {
-                    this.firstNameDictionary[firstName].Add(record);
-                }
-                else
-                {
-                    this.firstNameDictionary[firstName] = new List<FileCabinetRecord>() { record };
-                }
+                this.AddByFirstNameToDictionary(firstName, record);
             }
 
             if (!string.Equals(record.LastName, lastName, StringComparison.OrdinalIgnoreCase))
             {
                 this.lastNameDictionary[record.LastName].Remove(record);
-                if (this.lastNameDictionary.ContainsKey(lastName))
-                {
-                    this.lastNameDictionary[lastName].Add(record);
-                }
-                else
-                {
-                    this.lastNameDictionary[lastName] = new List<FileCabinetRecord>() { record };
-                }
+                this.AddBySecondNameToDictionary(lastName, record);
             }
 
             if (!DateTime.Equals(record.DateOfBirth, dateOfBirth))
             {
                 this.dateOfBirthDictionary[record.DateOfBirth].Remove(record);
-                if (this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
-                {
-                    this.dateOfBirthDictionary[dateOfBirth].Add(record);
-                }
-                else
-                {
-                    this.dateOfBirthDictionary[dateOfBirth] = new List<FileCabinetRecord>() { record };
-                }
+                this.AddByDateOfBirthToDictionary(dateOfBirth, record);
             }
 
             record.FirstName = firstName;
@@ -119,12 +74,12 @@ namespace FileCabinetApp
 
         public FileCabinetRecord[] GetRecords()
         {
-            return this.list.ToArray();
+            return this.recordsList.ToArray();
         }
 
         public FileCabinetRecord GetRecord(int id)
         {
-            return this.list.Find((FileCabinetRecord record) => record.Id == id);
+            return this.recordsList.Find((FileCabinetRecord record) => record.Id == id);
         }
 
         public FileCabinetRecord[] FindByFirstName(string firstName)
@@ -149,13 +104,8 @@ namespace FileCabinetApp
 
         public FileCabinetRecord[] FindByDate(string dateOfBirth)
         {
-            CultureInfo provider = CultureInfo.InvariantCulture;
             DateTime date;
-            try
-            {
-                date = DateTime.Parse(dateOfBirth, provider);
-            }
-            catch (FormatException)
+            if (!DateTime.TryParse(dateOfBirth, out date))
             {
                 return Array.Empty<FileCabinetRecord>();
             }
@@ -170,7 +120,7 @@ namespace FileCabinetApp
 
         public int GetStat()
         {
-            return this.list.Count;
+            return this.recordsList.Count;
         }
 
         private static void ValidateData(string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
@@ -185,7 +135,7 @@ namespace FileCabinetApp
                 throw new ArgumentException("last name should contain from 2 to 60 symbols", nameof(lastName));
             }
 
-            if (dateOfBirth < MinDate || dateOfBirth > DateTime.Now)
+            if (dateOfBirth < MinimalValidDate || dateOfBirth > DateTime.Now)
             {
                 throw new ArgumentException("Enter a valid date", nameof(dateOfBirth));
             }
@@ -203,6 +153,42 @@ namespace FileCabinetApp
             if (!char.IsLetter(grade))
             {
                 throw new ArgumentException("grade should conrain one letter", nameof(grade));
+            }
+        }
+
+        private void AddByDateOfBirthToDictionary(DateTime dateOfBirth, FileCabinetRecord record)
+        {
+            if (this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
+            {
+                this.dateOfBirthDictionary[dateOfBirth].Add(record);
+            }
+            else
+            {
+                this.dateOfBirthDictionary[dateOfBirth] = new List<FileCabinetRecord>() { record };
+            }
+        }
+
+        private void AddBySecondNameToDictionary(string lastName, FileCabinetRecord record)
+        {
+            if (this.lastNameDictionary.ContainsKey(lastName))
+            {
+                this.lastNameDictionary[lastName].Add(record);
+            }
+            else
+            {
+                this.lastNameDictionary[lastName] = new List<FileCabinetRecord>() { record };
+            }
+        }
+
+        private void AddByFirstNameToDictionary(string firstName, FileCabinetRecord record)
+        {
+            if (this.firstNameDictionary.ContainsKey(firstName))
+            {
+                this.firstNameDictionary[firstName].Add(record);
+            }
+            else
+            {
+                this.firstNameDictionary[firstName] = new List<FileCabinetRecord>() { record };
             }
         }
     }
