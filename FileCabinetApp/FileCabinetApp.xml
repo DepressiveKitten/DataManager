@@ -4,6 +4,100 @@
         <name>FileCabinetApp</name>
     </assembly>
     <members>
+        <member name="T:FileCabinetApp.FileCabinetCustomService">
+            <summary>
+            Custom validator.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetCustomService.ValidateFirstName(System.String)">
+            <summary>
+            validate first name.
+            </summary>
+            <param name="firstName">string that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetCustomService.ValidateLastName(System.String)">
+            <summary>
+            validate last name.
+            </summary>
+            <param name="lastName">string that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetCustomService.ValidateDateOfBirth(System.DateTime)">
+            <summary>
+            validate date of birth.
+            </summary>
+            <param name="dateOfBirth">date that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetCustomService.ValidateSalary(System.Decimal)">
+            <summary>
+            validate salary.
+            </summary>
+            <param name="salary">decimal that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetCustomService.ValidateHeight(System.Int16)">
+            <summary>
+            validate height.
+            </summary>
+            <param name="height">short integer that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetCustomService.ValidateGrade(System.Char)">
+            <summary>
+            validate grade.
+            </summary>
+            <param name="grade">char that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="T:FileCabinetApp.FileCabinetDefaultService">
+            <summary>
+            Default validator.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.ValidateFirstName(System.String)">
+            <summary>
+            validate first name.
+            </summary>
+            <param name="firstName">string that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.ValidateLastName(System.String)">
+            <summary>
+            validate last name.
+            </summary>
+            <param name="lastName">string that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.ValidateDateOfBirth(System.DateTime)">
+            <summary>
+            validate date of birth.
+            </summary>
+            <param name="dateOfBirth">date that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.ValidateSalary(System.Decimal)">
+            <summary>
+            validate salary.
+            </summary>
+            <param name="salary">decimal that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.ValidateHeight(System.Int16)">
+            <summary>
+            validate height.
+            </summary>
+            <param name="height">short integer that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.ValidateGrade(System.Char)">
+            <summary>
+            validate grade.
+            </summary>
+            <param name="grade">char that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
         <member name="T:FileCabinetApp.FileCabinetRecord">
             <summary>
             Contains fields that associate with each record.
@@ -55,6 +149,12 @@
             <summary>
             Contains all records and process data.
             </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.#ctor(FileCabinetApp.IRecordValidator)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetService"/> class.
+            </summary>
+            <param name="validator">validator that will be used in current service.</param>
         </member>
         <member name="M:FileCabinetApp.FileCabinetService.CreateRecord(FileCabinetApp.RecordParameterObject)">
             <summary>
@@ -110,6 +210,11 @@
             </summary>
             <returns>Total amount of all records.</returns>
         </member>
+        <member name="T:FileCabinetApp.IFileCabinetService">
+            <summary>
+            Cabinet Services interface.
+            </summary>
+        </member>
         <member name="M:FileCabinetApp.IFileCabinetService.CreateRecord(FileCabinetApp.RecordParameterObject)">
             <summary>
             Create a new record and adds it to the list.
@@ -163,6 +268,59 @@
             Return total amount of all records.
             </summary>
             <returns>Total amount of all records.</returns>
+        </member>
+        <member name="T:FileCabinetApp.IRecordValidator">
+            <summary>
+            Interface for all validators.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateParameters(FileCabinetApp.RecordParameterObject)">
+            <summary>
+            validate all fields of record parameter.
+            </summary>
+            <param name="recordParameter">Object to validate.</param>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateFirstName(System.String)">
+            <summary>
+            validate first name.
+            </summary>
+            <param name="firstName">string that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateLastName(System.String)">
+            <summary>
+            validate last name.
+            </summary>
+            <param name="lastName">string that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateDateOfBirth(System.DateTime)">
+            <summary>
+            validate date of birth.
+            </summary>
+            <param name="dateOfBirth">date that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateSalary(System.Decimal)">
+            <summary>
+            validate salary.
+            </summary>
+            <param name="salary">decimal that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateHeight(System.Int16)">
+            <summary>
+            validate height.
+            </summary>
+            <param name="height">short integer that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IRecordValidator.ValidateGrade(System.Char)">
+            <summary>
+            validate grade.
+            </summary>
+            <param name="grade">char that should be validating.</param>
+            <returns>result of validation and error message if validation fails.</returns>
         </member>
         <member name="T:FileCabinetApp.Program">
             <summary>

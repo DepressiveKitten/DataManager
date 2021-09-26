@@ -3,6 +3,9 @@ using System.Collections.ObjectModel;
 
 namespace FileCabinetApp
 {
+    /// <summary>
+    /// Cabinet Services interface.
+    /// </summary>
     public interface IFileCabinetService
     {
         /// <summary>
