@@ -15,29 +15,55 @@ namespace FileCabinetApp
                 throw new ArgumentNullException(nameof(recordParameter));
             }
 
-            this.ValidateFirstName(recordParameter.FirstName);
+            Tuple<bool, string> result;
 
-            this.ValidateLastName(recordParameter.LastName);
+            result = this.ValidateFirstName(recordParameter.FirstName);
+            if (!result.Item1)
+            {
+                throw new ArgumentException(result.Item2, nameof(recordParameter));
+            }
 
-            this.ValidateDateOfBirth(recordParameter.DateOfBirth);
+            result = this.ValidateLastName(recordParameter.LastName);
+            if (!result.Item1)
+            {
+                throw new ArgumentException(result.Item2, nameof(recordParameter));
+            }
 
-            this.ValidateHeight(recordParameter.Height);
+            result = this.ValidateDateOfBirth(recordParameter.DateOfBirth);
+            if (!result.Item1)
+            {
+                throw new ArgumentException(result.Item2, nameof(recordParameter));
+            }
 
-            this.ValidateSalary(recordParameter.Salary);
+            result = this.ValidateHeight(recordParameter.Height);
+            if (!result.Item1)
+            {
+                throw new ArgumentException(result.Item2, nameof(recordParameter));
+            }
 
-            this.ValidateGrade(recordParameter.Grade);
+            result = this.ValidateSalary(recordParameter.Salary);
+            if (!result.Item1)
+            {
+                throw new ArgumentException(result.Item2, nameof(recordParameter));
+            }
+
+            result = this.ValidateGrade(recordParameter.Grade);
+            if (!result.Item1)
+            {
+                throw new ArgumentException(result.Item2, nameof(recordParameter));
+            }
         }
 
-        public void ValidateFirstName(string firstName);
+        public Tuple<bool, string> ValidateFirstName(string firstName);
 
-        public void ValidateLastName(string lastName);
+        public Tuple<bool, string> ValidateLastName(string lastName);
 
-        public void ValidateDateOfBirth(DateTime dateOfBirth);
+        public Tuple<bool, string> ValidateDateOfBirth(DateTime dateOfBirth);
 
-        public void ValidateSalary(decimal salary);
+        public Tuple<bool, string> ValidateSalary(decimal salary);
 
-        public void ValidateHeight(short height);
+        public Tuple<bool, string> ValidateHeight(short height);
 
-        public void ValidateGrade(char grade);
+        public Tuple<bool, string> ValidateGrade(char grade);
     }
 }

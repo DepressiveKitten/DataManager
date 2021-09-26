@@ -110,6 +110,60 @@
             </summary>
             <returns>Total amount of all records.</returns>
         </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.CreateRecord(FileCabinetApp.RecordParameterObject)">
+            <summary>
+            Create a new record and adds it to the list.
+            </summary>
+            <param name="recordParameter">Data that should be stored in new record.</param>
+            <returns>Id of added record.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.EditRecord(System.Int32,FileCabinetApp.RecordParameterObject)">
+            <summary>
+            Create a new record and adds it to the list.
+            </summary>
+            <param name="id">Id of record you want to edit.</param>
+            <param name="recordParameter">Data that should be edited in record.</param>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.GetRecords">
+            <summary>
+            Return all records.
+            </summary>
+            <returns>List with all records.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.GetRecord(System.Int32)">
+            <summary>
+            Return record with given id.
+            </summary>
+            <param name="id">id of wanted record.</param>
+            <returns>Record with given id.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.FindByFirstName(System.String)">
+            <summary>
+            Finds all records with given first name.
+            </summary>
+            <param name="firstName">First name of wanted record.</param>
+            <returns>List of all record with given first name.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.FindByLastName(System.String)">
+            <summary>
+            Finds all records with given last name.
+            </summary>
+            <param name="lastName">Last name of wanted record.</param>
+            <returns>List of all record with given Last name.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.FindByDate(System.String)">
+            <summary>
+            Finds all records with date of birth.
+            </summary>
+            <param name="dateOfBirth">date of birth of wanted record.</param>
+            <returns>List of all record with given date of birth.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.GetStat">
+            <summary>
+            Return total amount of all records.
+            </summary>
+            <returns>Total amount of all records.</returns>
+        </member>
         <member name="T:FileCabinetApp.Program">
             <summary>
             Contains main programm functions.

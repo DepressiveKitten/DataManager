@@ -206,42 +206,16 @@ namespace FileCabinetApp
             Console.WriteLine($"{recordsCount} record(s).");
         }
 
-        private static bool InputFirstName(out string firstName)
+        private static Tuple<bool, string, string> StringConverter(string input)
         {
-            firstName = Console.ReadLine();
-            try
-            {
-                validator.ValidateFirstName(firstName);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
-
-            return true;
+            return new (true, string.Empty, input);
         }
 
-        private static bool InputLastName(out string lastName)
+        private static Tuple<bool, string, DateTime> DateConverter(string input)
         {
-            lastName = Console.ReadLine();
-            try
-            {
-                validator.ValidateLastName(lastName);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool InputDate(out DateTime dateOfBirth)
-        {
-            var date = Console.ReadLine().Split('/');
+            var date = input.Split('/');
             int day, month, year;
+            DateTime dateOfBirth;
             if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
             {
                 try
@@ -250,119 +224,100 @@ namespace FileCabinetApp
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    dateOfBirth = DateTime.MinValue;
-                    return false;
+                    return new (false, "invalid date", DateTime.Now);
                 }
 
-                try
-                {
-                    validator.ValidateDateOfBirth(dateOfBirth);
-                }
-                catch (ArgumentException ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    return false;
-                }
-
-                return true;
+                return new (true, string.Empty, dateOfBirth);
             }
 
-            dateOfBirth = DateTime.MinValue;
-            return false;
+            return new (false, "invalid format, try mm/dd/yyyy", DateTime.Now);
         }
 
-        private static bool InputHeight(out short height)
+        private static Tuple<bool, string, short> HeightConverter(string input)
         {
-            var str = Console.ReadLine();
-            if (!short.TryParse(str, out height))
+            short height;
+            if (!short.TryParse(input, out height))
             {
-                return false;
+                return new (false, "failed to parse", 0);
             }
 
-            try
-            {
-                validator.ValidateHeight(height);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
-
-            return true;
+            return new (true, string.Empty, height);
         }
 
-        private static bool InputSalary(out decimal salary)
+        private static Tuple<bool, string, decimal> SalaryConverter(string input)
         {
-            var str = Console.ReadLine();
-            if (!decimal.TryParse(str, out salary))
+            decimal salary;
+            if (!decimal.TryParse(input, out salary))
             {
-                return false;
+                return new (false, "failed to parse", 0);
             }
 
-            try
-            {
-                validator.ValidateSalary(salary);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
-
-            return true;
+            return new (true, string.Empty, salary);
         }
 
-        private static bool InputGrade(out char grade)
+        private static Tuple<bool, string, char> GradeConverter(string input)
         {
-            var str = Console.ReadLine();
+            char grade;
 
-            if (string.IsNullOrWhiteSpace(str) || str.Length > 1)
+            if (string.IsNullOrWhiteSpace(input) || input.Length > 1)
             {
                 grade = ' ';
-                return false;
+                return new (false, "should contain one symbol", grade);
             }
 
-            grade = str[0];
+            grade = input[0];
 
-            try
+            return new (true, string.Empty, grade);
+        }
+
+        private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)
+        {
+            do
             {
-                validator.ValidateGrade(grade);
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
+                T value;
 
-            return true;
+                var input = Console.ReadLine();
+                var conversionResult = converter(input);
+
+                if (!conversionResult.Item1)
+                {
+                    Console.WriteLine($"Conversion failed: {conversionResult.Item2}. Please, correct your input.");
+                    continue;
+                }
+
+                value = conversionResult.Item3;
+
+                var validationResult = validator(value);
+                if (!validationResult.Item1)
+                {
+                    Console.WriteLine($"Validation failed: {validationResult.Item2}. Please, correct your input.");
+                    continue;
+                }
+
+                return value;
+            }
+            while (true);
         }
 
         private static void Create(string parameters)
         {
             Console.Write("First name: ");
-            string firstName;
-            while (!InputFirstName(out firstName)) ;
+            string firstName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Last name: ");
-            string lastName;
-            while (!InputLastName(out lastName)) ;
+            string lastName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Date of birth: ");
-            DateTime date;
-            while (!InputDate(out date)) ;
+            DateTime date = ReadInput<DateTime>(DateConverter, validator.ValidateDateOfBirth);
 
             Console.Write("Height: ");
-            short height;
-            while (!InputHeight(out height)) ;
+            short height = ReadInput<short>(HeightConverter, validator.ValidateHeight);
 
             Console.Write("Salary: ");
-            decimal salary;
-            while (!InputSalary(out salary)) ;
+            decimal salary = ReadInput<decimal>(SalaryConverter, validator.ValidateSalary);
 
             Console.Write("Grade: ");
-            char grade;
-            while (!InputGrade(out grade)) ;
+            char grade = ReadInput<char>(GradeConverter, validator.ValidateGrade);
 
             RecordParameterObject recordParameterObject = new RecordParameterObject()
             {
@@ -417,31 +372,25 @@ namespace FileCabinetApp
 
             PrintRecordData(record);
 
-            Console.WriteLine("Enter new valid arguments to change them or anything else to leave them");
+            Console.WriteLine("Enter new valid arguments to change them");
 
             Console.Write("First name: ");
-            string firstName;
-            if (!InputFirstName(out firstName)) ;
+            string firstName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Last name: ");
-            string lastName;
-            if (!InputLastName(out lastName)) ;
+            string lastName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Date of birth: ");
-            DateTime date;
-            if (!InputDate(out date)) ;
+            DateTime date = ReadInput<DateTime>(DateConverter, validator.ValidateDateOfBirth);
 
             Console.Write("Height: ");
-            short height;
-            if (!InputHeight(out height)) ;
+            short height = ReadInput<short>(HeightConverter, validator.ValidateHeight);
 
             Console.Write("Salary: ");
-            decimal salary;
-            if (!InputSalary(out salary)) ;
+            decimal salary = ReadInput<decimal>(SalaryConverter, validator.ValidateSalary);
 
             Console.Write("Grade: ");
-            char grade;
-            if (!InputGrade(out grade)) ;
+            char grade = ReadInput<char>(GradeConverter, validator.ValidateGrade);
 
             RecordParameterObject recordParameterObject = new RecordParameterObject()
             {
