@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace FileCabinetApp
 {
-    public class FileCabinetCustomService : FileCabinetService
+    public class FileCabinetCustomService : IRecordValidator
     {
         private static readonly DateTime MinimalValidDate = new DateTime(1900, 1, 1);
         private static readonly DateTime MaximumValidDate = DateTime.Now;
 
-        public override void ValidateFirstName(string firstName)
+        public void ValidateFirstName(string firstName)
         {
             if (string.IsNullOrWhiteSpace(firstName) || firstName.Length < 2 || firstName.Length > 10)
             {
@@ -19,7 +19,7 @@ namespace FileCabinetApp
             }
         }
 
-        public override void ValidateLastName(string lastName)
+        public void ValidateLastName(string lastName)
         {
             if (string.IsNullOrWhiteSpace(lastName) || lastName.Length < 2 || lastName.Length > 20)
             {
@@ -27,7 +27,7 @@ namespace FileCabinetApp
             }
         }
 
-        public override void ValidateDateOfBirth(DateTime dateOfBirth)
+        public void ValidateDateOfBirth(DateTime dateOfBirth)
         {
             if (dateOfBirth < MinimalValidDate || dateOfBirth > MaximumValidDate)
             {
@@ -35,7 +35,7 @@ namespace FileCabinetApp
             }
         }
 
-        public override void ValidateSalary(decimal salary)
+        public void ValidateSalary(decimal salary)
         {
             if (salary < 0 || salary > 10000)
             {
@@ -43,7 +43,7 @@ namespace FileCabinetApp
             }
         }
 
-        public override void ValidateHeight(short height)
+        public void ValidateHeight(short height)
         {
             if (height < 50 || height > 250)
             {
@@ -51,7 +51,7 @@ namespace FileCabinetApp
             }
         }
 
-        public override void ValidateGrade(char grade)
+        public void ValidateGrade(char grade)
         {
             if (!char.IsDigit(grade))
             {

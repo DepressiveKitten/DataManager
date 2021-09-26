@@ -7,13 +7,19 @@ namespace FileCabinetApp
     /// <summary>
     /// Contains all records and process data.
     /// </summary>
-    public abstract class FileCabinetService
+    public class FileCabinetService
     {
+        private readonly IRecordValidator validator;
         private static readonly StringComparer DictionaryComparer = StringComparer.OrdinalIgnoreCase;
         private readonly List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
         private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
         private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
+
+        public FileCabinetService(IRecordValidator validator)
+        {
+            this.validator = validator;
+        }
 
         /// <summary>
         /// Create a new record and adds it to the list.
@@ -27,7 +33,7 @@ namespace FileCabinetApp
                 throw new ArgumentNullException(nameof(recordParameter));
             }
 
-            ValidateParameters(recordParameter);
+            this.validator.ValidateParameters(recordParameter);
 
             var record = new FileCabinetRecord
             {
@@ -66,7 +72,7 @@ namespace FileCabinetApp
                 throw new ArgumentException(id + " record is not existing", nameof(id));
             }
 
-            ValidateParameters(recordParameter);
+            this.validator.ValidateParameters(recordParameter);
 
             if (!string.Equals(record.FirstName, recordParameter.FirstName, StringComparison.OrdinalIgnoreCase))
             {
@@ -172,38 +178,6 @@ namespace FileCabinetApp
         {
             return this.recordsList.Count;
         }
-
-        private void ValidateParameters(RecordParameterObject recordParameter)
-        {
-            if (recordParameter is null)
-            {
-                throw new ArgumentNullException(nameof(recordParameter));
-            }
-
-            this.ValidateFirstName(recordParameter.FirstName);
-
-            this.ValidateLastName(recordParameter.LastName);
-
-            this.ValidateDateOfBirth(recordParameter.DateOfBirth);
-
-            this.ValidateHeight(recordParameter.Height);
-
-            this.ValidateSalary(recordParameter.Salary);
-
-            this.ValidateGrade(recordParameter.Grade);
-        }
-
-        public abstract void ValidateFirstName(string firstName);
-
-        public abstract void ValidateLastName(string lastName);
-
-        public abstract void ValidateDateOfBirth(DateTime dateOfBirth);
-
-        public abstract void ValidateSalary(decimal salary);
-
-        public abstract void ValidateHeight(short height);
-
-        public abstract void ValidateGrade(char grade);
 
         private void AddByDateOfBirthToDictionary(DateTime dateOfBirth, FileCabinetRecord record)
         {

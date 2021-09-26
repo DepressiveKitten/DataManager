@@ -17,6 +17,7 @@ namespace FileCabinetApp
         private const int ParametersIndex = 1;
         private const int CommandIndex = 0;
         private static FileCabinetService fileCabinetService;
+        private static IRecordValidator validator;
 
         private static bool isRunning = true;
 
@@ -132,10 +133,12 @@ namespace FileCabinetApp
                 }
             }
 
-            if (fileCabinetService is null)
+            if (validator is null)
             {
                 SetValidationRules("default");
             }
+
+            fileCabinetService = new FileCabinetService(validator);
 
             findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
             {
@@ -149,17 +152,17 @@ namespace FileCabinetApp
         {
             if (validationRules.Equals(validorsNames[0], StringComparison.OrdinalIgnoreCase))
             {
-                fileCabinetService = new FileCabinetDefaultService();
+                validator = new FileCabinetDefaultService();
                 System.Console.WriteLine($"Using {validorsNames[0]} validation rules.");
             }
 
             if (validationRules.Equals(validorsNames[1], StringComparison.OrdinalIgnoreCase))
             {
-                fileCabinetService = new FileCabinetCustomService();
+                validator = new FileCabinetCustomService();
                 System.Console.WriteLine($"Using {validorsNames[1]} validation rules.");
             }
 
-            if (fileCabinetService is null)
+            if (validator is null)
             {
                 System.Console.WriteLine($"{validationRules} is not proper validation rule");
             }
@@ -206,7 +209,7 @@ namespace FileCabinetApp
             firstName = Console.ReadLine();
             try
             {
-                fileCabinetService.ValidateFirstName(firstName);
+                validator.ValidateFirstName(firstName);
             }
             catch (ArgumentException ex)
             {
@@ -222,7 +225,7 @@ namespace FileCabinetApp
             lastName = Console.ReadLine();
             try
             {
-                fileCabinetService.ValidateLastName(lastName);
+                validator.ValidateLastName(lastName);
             }
             catch (ArgumentException ex)
             {
@@ -251,7 +254,7 @@ namespace FileCabinetApp
 
                 try
                 {
-                    fileCabinetService.ValidateDateOfBirth(dateOfBirth);
+                    validator.ValidateDateOfBirth(dateOfBirth);
                 }
                 catch (ArgumentException ex)
                 {
@@ -276,7 +279,7 @@ namespace FileCabinetApp
 
             try
             {
-                fileCabinetService.ValidateHeight(height);
+                validator.ValidateHeight(height);
             }
             catch (ArgumentException ex)
             {
@@ -297,7 +300,7 @@ namespace FileCabinetApp
 
             try
             {
-                fileCabinetService.ValidateSalary(salary);
+                validator.ValidateSalary(salary);
             }
             catch (ArgumentException ex)
             {
@@ -322,7 +325,7 @@ namespace FileCabinetApp
 
             try
             {
-                fileCabinetService.ValidateGrade(grade);
+                validator.ValidateGrade(grade);
             }
             catch (ArgumentException ex)
             {
