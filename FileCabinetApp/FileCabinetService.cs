@@ -8,7 +8,7 @@ namespace FileCabinetApp
     /// <summary>
     /// Contains all records and process data.
     /// </summary>
-    public class FileCabinetService
+    public class FileCabinetService : IFileCabinetService
     {
         private static readonly StringComparer DictionaryComparer = StringComparer.OrdinalIgnoreCase;
         private readonly IRecordValidator validator;
