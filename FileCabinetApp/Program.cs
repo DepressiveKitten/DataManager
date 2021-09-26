@@ -259,7 +259,16 @@ namespace FileCabinetApp
                 Console.WriteLine("Grade should contain one letter");
             }
 
-            fileCabinetService.CreateRecord(firstName, lastName, date, height, salary, grade);
+            RecordParameterObject recordParameterObject = new RecordParameterObject()
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = date,
+                Height = height,
+                Salary = salary,
+                Grade = grade,
+            };
+            fileCabinetService.CreateRecord(recordParameterObject);
             Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
         }
 
@@ -347,7 +356,16 @@ namespace FileCabinetApp
                 grade = record.Grade;
             }
 
-            fileCabinetService.EditRecord(id, firstName, lastName, date, height, salary, grade);
+            RecordParameterObject recordParameterObject = new RecordParameterObject()
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = date,
+                Height = height,
+                Salary = salary,
+                Grade = grade,
+            };
+            fileCabinetService.EditRecord(id, recordParameterObject);
             Console.WriteLine("Record #{0} is updated.", id);
         }
 

@@ -4,29 +4,163 @@
         <name>FileCabinetApp</name>
     </assembly>
     <members>
-        <member name="M:FileCabinetApp.FileCabinetService.CreateRecord(System.String,System.String,System.DateTime,System.Int16,System.Decimal,System.Char)">
+        <member name="T:FileCabinetApp.FileCabinetRecord">
+            <summary>
+            Contains fields that associate with each record.
+            </summary>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.Id">
+            <summary>
+            Gets or sets the Id of the record.
+            </summary>
+            <value>Id of the record.</value>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.FirstName">
+            <summary>
+            Gets or sets the first name for the record.
+            </summary>
+            <value>First name of the record.</value>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.LastName">
+            <summary>
+            Gets or sets the last name for the record.
+            </summary>
+            <value>Last name of the record.</value>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.Height">
+            <summary>
+            Gets or sets the height of the person.
+            </summary>
+            <value>Height of the person.</value>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.Salary">
+            <summary>
+            Gets or sets the salary of the person.
+            </summary>
+            <value>Salary of the person.</value>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.Grade">
+            <summary>
+            Gets or sets the grade of the person.
+            </summary>
+            <value>Grade of the person.</value>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetRecord.DateOfBirth">
+            <summary>
+            Gets or sets the date of birth of the person.
+            </summary>
+            <value>Date of birth of the person.</value>
+        </member>
+        <member name="T:FileCabinetApp.FileCabinetService">
+            <summary>
+            Contains all records and process data.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.CreateRecord(FileCabinetApp.RecordParameterObject)">
             <summary>
             Create a new record and adds it to the list.
             </summary>
-            <param name="firstName">The first that stored in record.</param>
-            <param name="lastName">The last that stored in record.</param>
-            <param name="dateOfBirth">Person's date of birth.</param>
-            <param name="height">Person's height.</param>
-            <param name="salary">Person's salary.</param>
-            <param name="grade">Person's grade.</param>
+            <param name="recordParameter">Data that should be stored in new record.</param>
             <returns>Id of added record.</returns>
         </member>
-        <member name="M:FileCabinetApp.FileCabinetService.EditRecord(System.Int32,System.String,System.String,System.DateTime,System.Int16,System.Decimal,System.Char)">
+        <member name="M:FileCabinetApp.FileCabinetService.EditRecord(System.Int32,FileCabinetApp.RecordParameterObject)">
             <summary>
             Create a new record and adds it to the list.
             </summary>
             <param name="id">Id of record you want to edit.</param>
-            <param name="firstName">The first that stored in record.</param>
-            <param name="lastName">The last that stored in record.</param>
-            <param name="dateOfBirth">Person's date of birth.</param>
-            <param name="height">Person's height.</param>
-            <param name="salary">Person's salary.</param>
-            <param name="grade">Person's grade.</param>
+            <param name="recordParameter">Data that should be edited in record.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.GetRecords">
+            <summary>
+            Return all records.
+            </summary>
+            <returns>List with all records.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.GetRecord(System.Int32)">
+            <summary>
+            Return record with given id.
+            </summary>
+            <param name="id">id of wanted record.</param>
+            <returns>Record with given id.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.FindByFirstName(System.String)">
+            <summary>
+            Finds all records with given first name.
+            </summary>
+            <param name="firstName">First name of wanted record.</param>
+            <returns>List of all record with given first name.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.FindByLastName(System.String)">
+            <summary>
+            Finds all records with given last name.
+            </summary>
+            <param name="lastName">Last name of wanted record.</param>
+            <returns>List of all record with given Last name.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.FindByDate(System.String)">
+            <summary>
+            Finds all records with date of birth.
+            </summary>
+            <param name="dateOfBirth">date of birth of wanted record.</param>
+            <returns>List of all record with given date of birth.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.GetStat">
+            <summary>
+            Return total amount of all records.
+            </summary>
+            <returns>Total amount of all records.</returns>
+        </member>
+        <member name="T:FileCabinetApp.Program">
+            <summary>
+            Contains main programm functions.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.Program.Main(System.String[])">
+            <summary>
+            Starting point of programm.
+            </summary>
+            <param name="args">Arguments from command line.</param>
+        </member>
+        <member name="T:FileCabinetApp.RecordParameterObject">
+            <summary>
+            Contains fields that associate with each record.
+            </summary>
+        </member>
+        <member name="P:FileCabinetApp.RecordParameterObject.FirstName">
+            <summary>
+            Gets the first name for the record.
+            </summary>
+            <value>First name of the record.</value>
+        </member>
+        <member name="P:FileCabinetApp.RecordParameterObject.LastName">
+            <summary>
+            Gets the last name for the record.
+            </summary>
+            <value>Last name of the record.</value>
+        </member>
+        <member name="P:FileCabinetApp.RecordParameterObject.Height">
+            <summary>
+            Gets the height of the person.
+            </summary>
+            <value>Height of the person.</value>
+        </member>
+        <member name="P:FileCabinetApp.RecordParameterObject.Salary">
+            <summary>
+            Gets the salary of the person.
+            </summary>
+            <value>Salary of the person.</value>
+        </member>
+        <member name="P:FileCabinetApp.RecordParameterObject.Grade">
+            <summary>
+            Gets the grade of the person.
+            </summary>
+            <value>Grade of the person.</value>
+        </member>
+        <member name="P:FileCabinetApp.RecordParameterObject.DateOfBirth">
+            <summary>
+            Gets the date of birth of the person.
+            </summary>
+            <value>Date of birth of the person.</value>
         </member>
     </members>
 </doc>

@@ -19,32 +19,32 @@ namespace FileCabinetApp
         /// <summary>
         /// Create a new record and adds it to the list.
         /// </summary>
-        /// <param name="firstName">The first that stored in record.</param>
-        /// <param name="lastName">The last that stored in record.</param>
-        /// <param name="dateOfBirth">Person's date of birth.</param>
-        /// <param name="height">Person's height.</param>
-        /// <param name="salary">Person's salary.</param>
-        /// <param name="grade">Person's grade.</param>
+        /// <param name="recordParameter">Data that should be stored in new record.</param>
         /// <returns>Id of added record.</returns>
-        public int CreateRecord(string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
+        public int CreateRecord(RecordParameterObject recordParameter)
         {
-            ValidateData(firstName, lastName, dateOfBirth, height, salary, grade);
+            if (recordParameter is null)
+            {
+                throw new ArgumentNullException(nameof(recordParameter));
+            }
+
+            ValidateData(recordParameter);
 
             var record = new FileCabinetRecord
             {
                 Id = this.recordsList.Count + 1,
-                FirstName = firstName,
-                LastName = lastName,
-                DateOfBirth = dateOfBirth,
-                Height = height,
-                Salary = salary,
-                Grade = grade,
+                FirstName = recordParameter.FirstName,
+                LastName = recordParameter.LastName,
+                DateOfBirth = recordParameter.DateOfBirth,
+                Height = recordParameter.Height,
+                Salary = recordParameter.Salary,
+                Grade = recordParameter.Grade,
             };
 
             this.recordsList.Add(record);
-            this.AddByFirstNameToDictionary(firstName, record);
-            this.AddBySecondNameToDictionary(lastName, record);
-            this.AddByDateOfBirthToDictionary(dateOfBirth, record);
+            this.AddByFirstNameToDictionary(recordParameter.FirstName, record);
+            this.AddBySecondNameToDictionary(recordParameter.LastName, record);
+            this.AddByDateOfBirthToDictionary(recordParameter.DateOfBirth, record);
 
             return record.Id;
         }
@@ -53,46 +53,46 @@ namespace FileCabinetApp
         /// Create a new record and adds it to the list.
         /// </summary>
         /// <param name="id">Id of record you want to edit.</param>
-        /// <param name="firstName">The first that stored in record.</param>
-        /// <param name="lastName">The last that stored in record.</param>
-        /// <param name="dateOfBirth">Person's date of birth.</param>
-        /// <param name="height">Person's height.</param>
-        /// <param name="salary">Person's salary.</param>
-        /// <param name="grade">Person's grade.</param>
-        public void EditRecord(int id, string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
+        /// <param name="recordParameter">Data that should be edited in record.</param>
+        public void EditRecord(int id, RecordParameterObject recordParameter)
         {
+            if (recordParameter is null)
+            {
+                throw new ArgumentNullException(nameof(recordParameter));
+            }
+
             FileCabinetRecord record = this.recordsList.Find((FileCabinetRecord record) => record.Id == id);
             if (record is null)
             {
                 throw new ArgumentException(id + " record is not existing", nameof(id));
             }
 
-            ValidateData(firstName, lastName, dateOfBirth, height, salary, grade);
+            ValidateData(recordParameter);
 
-            if (!string.Equals(record.FirstName, firstName, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(record.FirstName, recordParameter.FirstName, StringComparison.OrdinalIgnoreCase))
             {
                 this.firstNameDictionary[record.FirstName].Remove(record);
-                this.AddByFirstNameToDictionary(firstName, record);
+                this.AddByFirstNameToDictionary(recordParameter.FirstName, record);
             }
 
-            if (!string.Equals(record.LastName, lastName, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(record.LastName, recordParameter.LastName, StringComparison.OrdinalIgnoreCase))
             {
                 this.lastNameDictionary[record.LastName].Remove(record);
-                this.AddBySecondNameToDictionary(lastName, record);
+                this.AddBySecondNameToDictionary(recordParameter.LastName, record);
             }
 
-            if (!DateTime.Equals(record.DateOfBirth, dateOfBirth))
+            if (!DateTime.Equals(record.DateOfBirth, recordParameter.DateOfBirth))
             {
                 this.dateOfBirthDictionary[record.DateOfBirth].Remove(record);
-                this.AddByDateOfBirthToDictionary(dateOfBirth, record);
+                this.AddByDateOfBirthToDictionary(recordParameter.DateOfBirth, record);
             }
 
-            record.FirstName = firstName;
-            record.LastName = lastName;
-            record.DateOfBirth = dateOfBirth;
-            record.Height = height;
-            record.Salary = salary;
-            record.Grade = grade;
+            record.FirstName = recordParameter.FirstName;
+            record.LastName = recordParameter.LastName;
+            record.DateOfBirth = recordParameter.DateOfBirth;
+            record.Height = recordParameter.Height;
+            record.Salary = recordParameter.Salary;
+            record.Grade = recordParameter.Grade;
         }
 
         /// <summary>
@@ -174,36 +174,36 @@ namespace FileCabinetApp
             return this.recordsList.Count;
         }
 
-        private static void ValidateData(string firstName, string lastName, DateTime dateOfBirth, short height, decimal salary, char grade)
+        private static void ValidateData(RecordParameterObject recordParameter)
         {
-            if (string.IsNullOrWhiteSpace(firstName) || firstName.Length < 2 || firstName.Length > 60)
+            if (string.IsNullOrWhiteSpace(recordParameter.FirstName) || recordParameter.FirstName.Length < 2 || recordParameter.FirstName.Length > 60)
             {
-                throw new ArgumentException("first name should contain from 2 to 60 symbols", nameof(firstName));
+                throw new ArgumentException("first name should contain from 2 to 60 symbols", nameof(recordParameter));
             }
 
-            if (string.IsNullOrWhiteSpace(lastName) || lastName.Length < 2 || lastName.Length > 60)
+            if (string.IsNullOrWhiteSpace(recordParameter.LastName) || recordParameter.LastName.Length < 2 || recordParameter.LastName.Length > 60)
             {
-                throw new ArgumentException("last name should contain from 2 to 60 symbols", nameof(lastName));
+                throw new ArgumentException("last name should contain from 2 to 60 symbols", nameof(recordParameter));
             }
 
-            if (dateOfBirth < MinimalValidDate || dateOfBirth > DateTime.Now)
+            if (recordParameter.DateOfBirth < MinimalValidDate || recordParameter.DateOfBirth > DateTime.Now)
             {
-                throw new ArgumentException("Enter a valid date", nameof(dateOfBirth));
+                throw new ArgumentException("Enter a valid date", nameof(recordParameter));
             }
 
-            if (height < 100 || height > 220)
+            if (recordParameter.Height < 100 || recordParameter.Height > 220)
             {
-                throw new ArgumentException("Enter a valid height", nameof(height));
+                throw new ArgumentException("Enter a valid height", nameof(recordParameter));
             }
 
-            if (salary < 0)
+            if (recordParameter.Salary < 0)
             {
-                throw new ArgumentException("salary should be positive", nameof(salary));
+                throw new ArgumentException("salary should be positive", nameof(recordParameter));
             }
 
-            if (!char.IsLetter(grade))
+            if (!char.IsLetter(recordParameter.Grade))
             {
-                throw new ArgumentException("grade should conrain one letter", nameof(grade));
+                throw new ArgumentException("grade should conrain one letter", nameof(recordParameter));
             }
         }
 
