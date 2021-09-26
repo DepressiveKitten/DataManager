@@ -7,9 +7,8 @@ namespace FileCabinetApp
     /// <summary>
     /// Contains all records and process data.
     /// </summary>
-    public class FileCabinetService
+    public abstract class FileCabinetService
     {
-        private static readonly DateTime MinimalValidDate = new DateTime(1950, 1, 1);
         private static readonly StringComparer DictionaryComparer = StringComparer.OrdinalIgnoreCase;
         private readonly List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
         private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
@@ -28,7 +27,7 @@ namespace FileCabinetApp
                 throw new ArgumentNullException(nameof(recordParameter));
             }
 
-            ValidateData(recordParameter);
+            ValidateParameters(recordParameter);
 
             var record = new FileCabinetRecord
             {
@@ -67,7 +66,7 @@ namespace FileCabinetApp
                 throw new ArgumentException(id + " record is not existing", nameof(id));
             }
 
-            ValidateData(recordParameter);
+            ValidateParameters(recordParameter);
 
             if (!string.Equals(record.FirstName, recordParameter.FirstName, StringComparison.OrdinalIgnoreCase))
             {
@@ -174,38 +173,37 @@ namespace FileCabinetApp
             return this.recordsList.Count;
         }
 
-        private static void ValidateData(RecordParameterObject recordParameter)
+        private void ValidateParameters(RecordParameterObject recordParameter)
         {
-            if (string.IsNullOrWhiteSpace(recordParameter.FirstName) || recordParameter.FirstName.Length < 2 || recordParameter.FirstName.Length > 60)
+            if (recordParameter is null)
             {
-                throw new ArgumentException("first name should contain from 2 to 60 symbols", nameof(recordParameter));
+                throw new ArgumentNullException(nameof(recordParameter));
             }
 
-            if (string.IsNullOrWhiteSpace(recordParameter.LastName) || recordParameter.LastName.Length < 2 || recordParameter.LastName.Length > 60)
-            {
-                throw new ArgumentException("last name should contain from 2 to 60 symbols", nameof(recordParameter));
-            }
+            this.ValidateFirstName(recordParameter.FirstName);
 
-            if (recordParameter.DateOfBirth < MinimalValidDate || recordParameter.DateOfBirth > DateTime.Now)
-            {
-                throw new ArgumentException("Enter a valid date", nameof(recordParameter));
-            }
+            this.ValidateLastName(recordParameter.LastName);
 
-            if (recordParameter.Height < 100 || recordParameter.Height > 220)
-            {
-                throw new ArgumentException("Enter a valid height", nameof(recordParameter));
-            }
+            this.ValidateDateOfBirth(recordParameter.DateOfBirth);
 
-            if (recordParameter.Salary < 0)
-            {
-                throw new ArgumentException("salary should be positive", nameof(recordParameter));
-            }
+            this.ValidateHeight(recordParameter.Height);
 
-            if (!char.IsLetter(recordParameter.Grade))
-            {
-                throw new ArgumentException("grade should conrain one letter", nameof(recordParameter));
-            }
+            this.ValidateSalary(recordParameter.Salary);
+
+            this.ValidateGrade(recordParameter.Grade);
         }
+
+        public abstract void ValidateFirstName(string firstName);
+
+        public abstract void ValidateLastName(string lastName);
+
+        public abstract void ValidateDateOfBirth(DateTime dateOfBirth);
+
+        public abstract void ValidateSalary(decimal salary);
+
+        public abstract void ValidateHeight(short height);
+
+        public abstract void ValidateGrade(char grade);
 
         private void AddByDateOfBirthToDictionary(DateTime dateOfBirth, FileCabinetRecord record)
         {

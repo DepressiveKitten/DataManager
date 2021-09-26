@@ -16,8 +16,7 @@ namespace FileCabinetApp
         private const int ExplanationHelpIndex = 2;
         private const int ParametersIndex = 1;
         private const int CommandIndex = 0;
-        private static readonly DateTime MinimalValidDate = new DateTime(1950, 1, 1);
-        private static FileCabinetService fileCabinetService = new FileCabinetService();
+        private static FileCabinetService fileCabinetService = new FileCabinetCustomService();
 
         private static bool isRunning = true;
 
@@ -124,11 +123,32 @@ namespace FileCabinetApp
             Console.WriteLine($"{recordsCount} record(s).");
         }
 
-        private static bool InputName(out string name)
+        private static bool InputFirstName(out string firstName)
         {
-            name = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(name) || name.Length < 2 || name.Length > 60)
+            firstName = Console.ReadLine();
+            try
             {
+                fileCabinetService.ValidateFirstName(firstName);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool InputLastName(out string lastName)
+        {
+            lastName = Console.ReadLine();
+            try
+            {
+                fileCabinetService.ValidateLastName(lastName);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
                 return false;
             }
 
@@ -151,8 +171,13 @@ namespace FileCabinetApp
                     return false;
                 }
 
-                if (dateOfBirth < MinimalValidDate || dateOfBirth > DateTime.Now)
+                try
                 {
+                    fileCabinetService.ValidateDateOfBirth(dateOfBirth);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine(ex.Message);
                     return false;
                 }
 
@@ -171,8 +196,13 @@ namespace FileCabinetApp
                 return false;
             }
 
-            if (height < 100 || height > 220)
+            try
             {
+                fileCabinetService.ValidateHeight(height);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
                 return false;
             }
 
@@ -187,8 +217,13 @@ namespace FileCabinetApp
                 return false;
             }
 
-            if (salary < 0)
+            try
             {
+                fileCabinetService.ValidateSalary(salary);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
                 return false;
             }
 
@@ -207,8 +242,13 @@ namespace FileCabinetApp
 
             grade = str[0];
 
-            if (!char.IsLetter(grade))
+            try
             {
+                fileCabinetService.ValidateGrade(grade);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
                 return false;
             }
 
@@ -219,45 +259,27 @@ namespace FileCabinetApp
         {
             Console.Write("First name: ");
             string firstName;
-            while (!InputName(out firstName))
-            {
-                Console.WriteLine("First name should contain from 2 to 60 symbols");
-            }
+            while (!InputFirstName(out firstName));
 
             Console.Write("Last name: ");
             string lastName;
-            while (!InputName(out lastName))
-            {
-                Console.WriteLine("Last name should contain from 2 to 60 symbols");
-            }
+            while (!InputLastName(out lastName));
 
             Console.Write("Date of birth: ");
             DateTime date;
-            while (!InputDate(out date))
-            {
-                Console.WriteLine("Date format should be mm/dd/yyyy");
-            }
+            while (!InputDate(out date));
 
             Console.Write("Height: ");
             short height;
-            while (!InputHeight(out height))
-            {
-                Console.WriteLine("Enter a valid height");
-            }
+            while (!InputHeight(out height));
 
             Console.Write("Salary: ");
             decimal salary;
-            while (!InputSalary(out salary))
-            {
-                Console.WriteLine("Enter a valid salary");
-            }
+            while (!InputSalary(out salary));
 
             Console.Write("Grade: ");
             char grade;
-            while (!InputGrade(out grade))
-            {
-                Console.WriteLine("Grade should contain one letter");
-            }
+            while (!InputGrade(out grade));
 
             RecordParameterObject recordParameterObject = new RecordParameterObject()
             {
@@ -316,45 +338,27 @@ namespace FileCabinetApp
 
             Console.Write("First name: ");
             string firstName;
-            if (!InputName(out firstName))
-            {
-                firstName = record.FirstName;
-            }
+            if (!InputFirstName(out firstName));
 
             Console.Write("Last name: ");
             string lastName;
-            if (!InputName(out lastName))
-            {
-                lastName = record.LastName;
-            }
+            if (!InputLastName(out lastName));
 
             Console.Write("Date of birth: ");
             DateTime date;
-            if (!InputDate(out date))
-            {
-                date = record.DateOfBirth;
-            }
+            if (!InputDate(out date));
 
             Console.Write("Height: ");
             short height;
-            if (!InputHeight(out height))
-            {
-                height = record.Height;
-            }
+            if (!InputHeight(out height));
 
             Console.Write("Salary: ");
             decimal salary;
-            if (!InputSalary(out salary))
-            {
-                salary = record.Salary;
-            }
+            if (!InputSalary(out salary));
 
             Console.Write("Grade: ");
             char grade;
-            if (!InputGrade(out grade))
-            {
-                grade = record.Grade;
-            }
+            if (!InputGrade(out grade));
 
             RecordParameterObject recordParameterObject = new RecordParameterObject()
             {
