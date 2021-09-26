@@ -16,15 +16,21 @@ namespace FileCabinetApp
         private const int ExplanationHelpIndex = 2;
         private const int ParametersIndex = 1;
         private const int CommandIndex = 0;
-        private static FileCabinetService fileCabinetService = new FileCabinetCustomService();
+        private static FileCabinetService fileCabinetService;
 
         private static bool isRunning = true;
 
-        private static Tuple<string, Func<string, FileCabinetRecord[]>>[] findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
+        private static Tuple<string, Func<string, FileCabinetRecord[]>>[] findOptions;
+
+        private static string[] validorsNames = new string[]
         {
-            new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
-            new Tuple<string, Func<string, FileCabinetRecord[]>>("lastname", fileCabinetService.FindByLastName),
-            new Tuple<string, Func<string, FileCabinetRecord[]>>("dateofbirth", fileCabinetService.FindByDate),
+            "default",
+            "custom",
+        };
+
+        private static Tuple<string, string, Action<string>>[] commandLineArguments = new Tuple<string, string, Action<string>>[]
+        {
+            new Tuple<string, string, Action<string>>("--validation-rules", "-v", SetValidationRules),
         };
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
@@ -56,6 +62,13 @@ namespace FileCabinetApp
         public static void Main(string[] args)
         {
             Console.WriteLine($"File Cabinet Application, developed by {Program.DeveloperName}");
+
+            if (args == null)
+            {
+                args = Array.Empty<string>();
+            }
+
+            Initialize(args);
             Console.WriteLine(Program.HintMessage);
             Console.WriteLine();
 
@@ -85,6 +98,71 @@ namespace FileCabinetApp
                 Console.WriteLine();
             }
             while (isRunning);
+        }
+
+        private static void Initialize(string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                int index;
+                string functionArguments = string.Empty;
+                if (args[i][1] == '-')
+                {
+                    var splitedFullArgument = args[i].Split('=', 2);
+                    index = Array.FindIndex(commandLineArguments, n => n.Item1.Equals(splitedFullArgument[0], StringComparison.OrdinalIgnoreCase));
+                    if (splitedFullArgument.Length >= 2)
+                    {
+                        functionArguments = splitedFullArgument[1];
+                    }
+                }
+                else
+                {
+                    index = Array.FindIndex(commandLineArguments, n => n.Item2.Equals(args[i], StringComparison.OrdinalIgnoreCase));
+                    if (args.Length > i + 1)
+                    {
+                        functionArguments = args[i + 1];
+                    }
+
+                    i++;
+                }
+
+                if (index >= 0 && !string.IsNullOrEmpty(functionArguments))
+                {
+                    commandLineArguments[index].Item3(functionArguments);
+                }
+            }
+
+            if (fileCabinetService is null)
+            {
+                SetValidationRules("default");
+            }
+
+            findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
+            {
+                new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
+                new Tuple<string, Func<string, FileCabinetRecord[]>>("lastname", fileCabinetService.FindByLastName),
+                new Tuple<string, Func<string, FileCabinetRecord[]>>("dateofbirth", fileCabinetService.FindByDate),
+            };
+        }
+
+        private static void SetValidationRules(string validationRules)
+        {
+            if (validationRules.Equals(validorsNames[0], StringComparison.OrdinalIgnoreCase))
+            {
+                fileCabinetService = new FileCabinetDefaultService();
+                System.Console.WriteLine($"Using {validorsNames[0]} validation rules.");
+            }
+
+            if (validationRules.Equals(validorsNames[1], StringComparison.OrdinalIgnoreCase))
+            {
+                fileCabinetService = new FileCabinetCustomService();
+                System.Console.WriteLine($"Using {validorsNames[1]} validation rules.");
+            }
+
+            if (fileCabinetService is null)
+            {
+                System.Console.WriteLine($"{validationRules} is not proper validation rule");
+            }
         }
 
         private static void PrintMissedCommandInfo(string command)
@@ -259,27 +337,27 @@ namespace FileCabinetApp
         {
             Console.Write("First name: ");
             string firstName;
-            while (!InputFirstName(out firstName));
+            while (!InputFirstName(out firstName)) ;
 
             Console.Write("Last name: ");
             string lastName;
-            while (!InputLastName(out lastName));
+            while (!InputLastName(out lastName)) ;
 
             Console.Write("Date of birth: ");
             DateTime date;
-            while (!InputDate(out date));
+            while (!InputDate(out date)) ;
 
             Console.Write("Height: ");
             short height;
-            while (!InputHeight(out height));
+            while (!InputHeight(out height)) ;
 
             Console.Write("Salary: ");
             decimal salary;
-            while (!InputSalary(out salary));
+            while (!InputSalary(out salary)) ;
 
             Console.Write("Grade: ");
             char grade;
-            while (!InputGrade(out grade));
+            while (!InputGrade(out grade)) ;
 
             RecordParameterObject recordParameterObject = new RecordParameterObject()
             {
@@ -338,27 +416,27 @@ namespace FileCabinetApp
 
             Console.Write("First name: ");
             string firstName;
-            if (!InputFirstName(out firstName));
+            if (!InputFirstName(out firstName)) ;
 
             Console.Write("Last name: ");
             string lastName;
-            if (!InputLastName(out lastName));
+            if (!InputLastName(out lastName)) ;
 
             Console.Write("Date of birth: ");
             DateTime date;
-            if (!InputDate(out date));
+            if (!InputDate(out date)) ;
 
             Console.Write("Height: ");
             short height;
-            if (!InputHeight(out height));
+            if (!InputHeight(out height)) ;
 
             Console.Write("Salary: ");
             decimal salary;
-            if (!InputSalary(out salary));
+            if (!InputSalary(out salary)) ;
 
             Console.Write("Grade: ");
             char grade;
-            if (!InputGrade(out grade));
+            if (!InputGrade(out grade)) ;
 
             RecordParameterObject recordParameterObject = new RecordParameterObject()
             {
