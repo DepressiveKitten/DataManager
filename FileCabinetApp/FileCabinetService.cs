@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 
 namespace FileCabinetApp
@@ -9,8 +10,8 @@ namespace FileCabinetApp
     /// </summary>
     public class FileCabinetService
     {
-        private readonly IRecordValidator validator;
         private static readonly StringComparer DictionaryComparer = StringComparer.OrdinalIgnoreCase;
+        private readonly IRecordValidator validator;
         private readonly List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
         private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
         private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>(DictionaryComparer);
@@ -104,9 +105,9 @@ namespace FileCabinetApp
         /// Return all records.
         /// </summary>
         /// <returns>List with all records.</returns>
-        public FileCabinetRecord[] GetRecords()
+        public ReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
-            return this.recordsList.ToArray();
+            return this.recordsList.AsReadOnly();
         }
 
         /// <summary>
@@ -124,14 +125,14 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="firstName">First name of wanted record.</param>
         /// <returns>List of all record with given first name.</returns>
-        public FileCabinetRecord[] FindByFirstName(string firstName)
+        public ReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
         {
             if (this.firstNameDictionary.ContainsKey(firstName))
             {
-                return this.firstNameDictionary[firstName].ToArray();
+                return new ReadOnlyCollection<FileCabinetRecord>(this.firstNameDictionary[firstName]);
             }
 
-            return Array.Empty<FileCabinetRecord>();
+            return new List<FileCabinetRecord>().AsReadOnly();
         }
 
         /// <summary>
@@ -139,14 +140,14 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="lastName">Last name of wanted record.</param>
         /// <returns>List of all record with given Last name.</returns>
-        public FileCabinetRecord[] FindByLastName(string lastName)
+        public ReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
             if (this.lastNameDictionary.ContainsKey(lastName))
             {
-                return this.lastNameDictionary[lastName].ToArray();
+                return this.lastNameDictionary[lastName].AsReadOnly();
             }
 
-            return Array.Empty<FileCabinetRecord>();
+            return new List<FileCabinetRecord>().AsReadOnly();
         }
 
         /// <summary>
@@ -154,20 +155,20 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="dateOfBirth">date of birth of wanted record.</param>
         /// <returns>List of all record with given date of birth.</returns>
-        public FileCabinetRecord[] FindByDate(string dateOfBirth)
+        public ReadOnlyCollection<FileCabinetRecord> FindByDate(string dateOfBirth)
         {
             DateTime date;
             if (!DateTime.TryParse(dateOfBirth, out date))
             {
-                return Array.Empty<FileCabinetRecord>();
+                return new List<FileCabinetRecord>().AsReadOnly();
             }
 
             if (this.dateOfBirthDictionary.ContainsKey(date))
             {
-                return this.dateOfBirthDictionary[date].ToArray();
+                return this.dateOfBirthDictionary[date].AsReadOnly();
             }
 
-            return Array.Empty<FileCabinetRecord>();
+            return new List<FileCabinetRecord>().AsReadOnly();
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 
 namespace FileCabinetApp
@@ -21,7 +23,7 @@ namespace FileCabinetApp
 
         private static bool isRunning = true;
 
-        private static Tuple<string, Func<string, FileCabinetRecord[]>>[] findOptions;
+        private static Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[] findOptions;
 
         private static string[] validorsNames = new string[]
         {
@@ -140,11 +142,11 @@ namespace FileCabinetApp
 
             fileCabinetService = new FileCabinetService(validator);
 
-            findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
+            findOptions = new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[]
             {
-                new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
-                new Tuple<string, Func<string, FileCabinetRecord[]>>("lastname", fileCabinetService.FindByLastName),
-                new Tuple<string, Func<string, FileCabinetRecord[]>>("dateofbirth", fileCabinetService.FindByDate),
+                new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>("firstname", fileCabinetService.FindByFirstName),
+                new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>("lastname", fileCabinetService.FindByLastName),
+                new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>("dateofbirth", fileCabinetService.FindByDate),
             };
         }
 
@@ -384,7 +386,7 @@ namespace FileCabinetApp
         private static void List(string parameters)
         {
             var list = fileCabinetService.GetRecords();
-            if (list.Length == 0)
+            if (list.Count == 0)
             {
                 Console.WriteLine("No records yet");
             }
@@ -470,8 +472,8 @@ namespace FileCabinetApp
                 return;
             }
 
-            FileCabinetRecord[] findRecords = findOptions[index].Item2(arguments[ParametersIndex]);
-            if (findRecords.Length == 0)
+            ReadOnlyCollection<FileCabinetRecord> findRecords = findOptions[index].Item2(arguments[ParametersIndex]);
+            if (findRecords.Count == 0)
             {
                 Console.WriteLine($"No records was found");
             }
