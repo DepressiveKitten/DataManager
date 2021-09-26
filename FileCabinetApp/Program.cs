@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 
 namespace FileCabinetApp
 {
+    /// <summary>
+    /// Contains main programm functions.
+    /// </summary>
     public static class Program
     {
         private const string DeveloperName = "Dmitriy Lopatin";
@@ -13,16 +18,22 @@ namespace FileCabinetApp
         private const int ExplanationHelpIndex = 2;
         private const int ParametersIndex = 1;
         private const int CommandIndex = 0;
-        private static readonly DateTime MinDate = new DateTime(1950, 1, 1);
-        private static FileCabinetService fileCabinetService = new FileCabinetService();
+        private static IFileCabinetService fileCabinetService;
+        private static IRecordValidator validator;
 
         private static bool isRunning = true;
 
-        private static Tuple<string, Func<string, FileCabinetRecord[]>>[] findOptions = new Tuple<string, Func<string, FileCabinetRecord[]>>[]
+        private static Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[] findOptions;
+
+        private static string[] validorsNames = new string[]
         {
-            new Tuple<string, Func<string, FileCabinetRecord[]>>("firstname", fileCabinetService.FindByFirstName),
-            new Tuple<string, Func<string, FileCabinetRecord[]>>("lastname", fileCabinetService.FindByLastName),
-            new Tuple<string, Func<string, FileCabinetRecord[]>>("dateofbirth", fileCabinetService.FindByDate),
+            "default",
+            "custom",
+        };
+
+        private static Tuple<string, string, Action<string>>[] commandLineArguments = new Tuple<string, string, Action<string>>[]
+        {
+            new Tuple<string, string, Action<string>>("--validation-rules", "-v", SetValidationRules),
         };
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
@@ -47,9 +58,20 @@ namespace FileCabinetApp
             new string[] { "find", "find record by parameters", "Type parametr you want to search for after 'find' command." },
         };
 
+        /// <summary>
+        /// Starting point of programm.
+        /// </summary>
+        /// <param name="args">Arguments from command line.</param>
         public static void Main(string[] args)
         {
             Console.WriteLine($"File Cabinet Application, developed by {Program.DeveloperName}");
+
+            if (args == null)
+            {
+                args = Array.Empty<string>();
+            }
+
+            Initialize(args);
             Console.WriteLine(Program.HintMessage);
             Console.WriteLine();
 
@@ -75,14 +97,82 @@ namespace FileCabinetApp
                 {
                     PrintMissedCommandInfo(command);
                 }
+
+                Console.WriteLine();
             }
             while (isRunning);
+        }
+
+        private static void Initialize(string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                int index;
+                string functionArguments = string.Empty;
+                if (args[i][1] == '-')
+                {
+                    var splitedFullArgument = args[i].Split('=', 2);
+                    index = Array.FindIndex(commandLineArguments, n => n.Item1.Equals(splitedFullArgument[0], StringComparison.OrdinalIgnoreCase));
+                    if (splitedFullArgument.Length >= 2)
+                    {
+                        functionArguments = splitedFullArgument[1];
+                    }
+                }
+                else
+                {
+                    index = Array.FindIndex(commandLineArguments, n => n.Item2.Equals(args[i], StringComparison.OrdinalIgnoreCase));
+                    if (args.Length > i + 1)
+                    {
+                        functionArguments = args[i + 1];
+                    }
+
+                    i++;
+                }
+
+                if (index >= 0 && !string.IsNullOrEmpty(functionArguments))
+                {
+                    commandLineArguments[index].Item3(functionArguments);
+                }
+            }
+
+            if (validator is null)
+            {
+                SetValidationRules("default");
+            }
+
+            fileCabinetService = new FileCabinetService(validator);
+
+            findOptions = new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[]
+            {
+                new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>("firstname", fileCabinetService.FindByFirstName),
+                new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>("lastname", fileCabinetService.FindByLastName),
+                new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>("dateofbirth", fileCabinetService.FindByDate),
+            };
+        }
+
+        private static void SetValidationRules(string validationRules)
+        {
+            if (validationRules.Equals(validorsNames[0], StringComparison.OrdinalIgnoreCase))
+            {
+                validator = new FileCabinetDefaultService();
+                System.Console.WriteLine($"Using {validorsNames[0]} validation rules.");
+            }
+
+            if (validationRules.Equals(validorsNames[1], StringComparison.OrdinalIgnoreCase))
+            {
+                validator = new FileCabinetCustomService();
+                System.Console.WriteLine($"Using {validorsNames[1]} validation rules.");
+            }
+
+            if (validator is null)
+            {
+                System.Console.WriteLine($"{validationRules} is not proper validation rule");
+            }
         }
 
         private static void PrintMissedCommandInfo(string command)
         {
             Console.WriteLine($"There is no '{command}' command.");
-            Console.WriteLine();
         }
 
         private static void PrintHelp(string parameters)
@@ -108,32 +198,24 @@ namespace FileCabinetApp
                     Console.WriteLine("\t{0}\t- {1}", helpMessage[Program.CommandHelpIndex], helpMessage[Program.DescriptionHelpIndex]);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private static void Stat(string parameters)
         {
             var recordsCount = Program.fileCabinetService.GetStat();
             Console.WriteLine($"{recordsCount} record(s).");
-            Console.WriteLine();
         }
 
-        private static bool InputName(out string name)
+        private static Tuple<bool, string, string> StringConverter(string input)
         {
-            name = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(name) || name.Length < 2 || name.Length > 60)
-            {
-                return false;
-            }
-
-            return true;
+            return new (true, string.Empty, input);
         }
 
-        private static bool InputDate(out DateTime dateOfBirth)
+        private static Tuple<bool, string, DateTime> DateConverter(string input)
         {
-            var date = Console.ReadLine().Split('/');
+            var date = input.Split('/');
             int day, month, year;
+            DateTime dateOfBirth;
             if (date.Length >= 3 && int.TryParse(date[0], out month) && int.TryParse(date[1], out day) && int.TryParse(date[2], out year))
             {
                 try
@@ -142,121 +224,112 @@ namespace FileCabinetApp
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    dateOfBirth = DateTime.MinValue;
-                    return false;
+                    return new (false, "invalid date", DateTime.Now);
                 }
 
-                if (dateOfBirth < MinDate || dateOfBirth > DateTime.Now)
-                {
-                    return false;
-                }
-
-                return true;
+                return new (true, string.Empty, dateOfBirth);
             }
 
-            dateOfBirth = DateTime.MinValue;
-            return false;
+            return new (false, "invalid format, try mm/dd/yyyy", DateTime.Now);
         }
 
-        private static bool InputHeight(out short height)
+        private static Tuple<bool, string, short> HeightConverter(string input)
         {
-            var str = Console.ReadLine();
-            if (!short.TryParse(str, out height))
+            short height;
+            if (!short.TryParse(input, out height))
             {
-                return false;
+                return new (false, "failed to parse", 0);
             }
 
-            if (height < 100 || height > 220)
-            {
-                return false;
-            }
-
-            return true;
+            return new (true, string.Empty, height);
         }
 
-        private static bool InputSalary(out decimal salary)
+        private static Tuple<bool, string, decimal> SalaryConverter(string input)
         {
-            var str = Console.ReadLine();
-            if (!decimal.TryParse(str, out salary))
+            decimal salary;
+            if (!decimal.TryParse(input, out salary))
             {
-                return false;
+                return new (false, "failed to parse", 0);
             }
 
-            if (salary < 0)
-            {
-                return false;
-            }
-
-            return true;
+            return new (true, string.Empty, salary);
         }
 
-        private static bool InputGrade(out char grade)
+        private static Tuple<bool, string, char> GradeConverter(string input)
         {
-            var str = Console.ReadLine();
+            char grade;
 
-            if (string.IsNullOrWhiteSpace(str) || str.Length > 1)
+            if (string.IsNullOrWhiteSpace(input) || input.Length > 1)
             {
                 grade = ' ';
-                return false;
+                return new (false, "should contain one symbol", grade);
             }
 
-            grade = str[0];
+            grade = input[0];
 
-            if (!char.IsLetter(grade))
+            return new (true, string.Empty, grade);
+        }
+
+        private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)
+        {
+            do
             {
-                return false;
-            }
+                T value;
 
-            return true;
+                var input = Console.ReadLine();
+                var conversionResult = converter(input);
+
+                if (!conversionResult.Item1)
+                {
+                    Console.WriteLine($"Conversion failed: {conversionResult.Item2}. Please, correct your input.");
+                    continue;
+                }
+
+                value = conversionResult.Item3;
+
+                var validationResult = validator(value);
+                if (!validationResult.Item1)
+                {
+                    Console.WriteLine($"Validation failed: {validationResult.Item2}. Please, correct your input.");
+                    continue;
+                }
+
+                return value;
+            }
+            while (true);
         }
 
         private static void Create(string parameters)
         {
             Console.Write("First name: ");
-            string firstName;
-            while (!InputName(out firstName))
-            {
-                Console.WriteLine("First name should contain from 2 to 60 symbols");
-            }
+            string firstName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Last name: ");
-            string lastName;
-            while (!InputName(out lastName))
-            {
-                Console.WriteLine("Last name should contain from 2 to 60 symbols");
-            }
+            string lastName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Date of birth: ");
-            DateTime date;
-            while (!InputDate(out date))
-            {
-                Console.WriteLine("Date format should be mm/dd/yyyy");
-            }
+            DateTime date = ReadInput<DateTime>(DateConverter, validator.ValidateDateOfBirth);
 
             Console.Write("Height: ");
-            short height;
-            while (!InputHeight(out height))
-            {
-                Console.WriteLine("Enter a valid height");
-            }
+            short height = ReadInput<short>(HeightConverter, validator.ValidateHeight);
 
             Console.Write("Salary: ");
-            decimal salary;
-            while (!InputSalary(out salary))
-            {
-                Console.WriteLine("Enter a valid salary");
-            }
+            decimal salary = ReadInput<decimal>(SalaryConverter, validator.ValidateSalary);
 
             Console.Write("Grade: ");
-            char grade;
-            while (!InputGrade(out grade))
-            {
-                Console.WriteLine("Grade should contain one letter");
-            }
+            char grade = ReadInput<char>(GradeConverter, validator.ValidateGrade);
 
-            fileCabinetService.CreateRecord(firstName, lastName, date, height, salary, grade);
+            RecordParameterObject recordParameterObject = new RecordParameterObject()
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = date,
+                Height = height,
+                Salary = salary,
+                Grade = grade,
+            };
+            fileCabinetService.CreateRecord(recordParameterObject);
             Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
-            Console.WriteLine();
         }
 
         private static void PrintRecordData(FileCabinetRecord record)
@@ -268,7 +341,7 @@ namespace FileCabinetApp
         private static void List(string parameters)
         {
             var list = fileCabinetService.GetRecords();
-            if (list.Length == 0)
+            if (list.Count == 0)
             {
                 Console.WriteLine("No records yet");
             }
@@ -279,8 +352,6 @@ namespace FileCabinetApp
                     PrintRecordData(record);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private static void Edit(string parameters)
@@ -301,53 +372,37 @@ namespace FileCabinetApp
 
             PrintRecordData(record);
 
-            Console.WriteLine("Enter new valid arguments to change them or anything else to leave them");
+            Console.WriteLine("Enter new valid arguments to change them");
 
             Console.Write("First name: ");
-            string firstName;
-            if (!InputName(out firstName))
-            {
-                firstName = record.FirstName;
-            }
+            string firstName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Last name: ");
-            string lastName;
-            if (!InputName(out lastName))
-            {
-                lastName = record.LastName;
-            }
+            string lastName = ReadInput<string>(StringConverter, validator.ValidateFirstName);
 
             Console.Write("Date of birth: ");
-            DateTime date;
-            if (!InputDate(out date))
-            {
-                date = record.DateOfBirth;
-            }
+            DateTime date = ReadInput<DateTime>(DateConverter, validator.ValidateDateOfBirth);
 
             Console.Write("Height: ");
-            short height;
-            if (!InputHeight(out height))
-            {
-                height = record.Height;
-            }
+            short height = ReadInput<short>(HeightConverter, validator.ValidateHeight);
 
             Console.Write("Salary: ");
-            decimal salary;
-            if (!InputSalary(out salary))
-            {
-                salary = record.Salary;
-            }
+            decimal salary = ReadInput<decimal>(SalaryConverter, validator.ValidateSalary);
 
             Console.Write("Grade: ");
-            char grade;
-            if (!InputGrade(out grade))
-            {
-                grade = record.Grade;
-            }
+            char grade = ReadInput<char>(GradeConverter, validator.ValidateGrade);
 
-            fileCabinetService.EditRecord(id, firstName, lastName, date, height, salary, grade);
+            RecordParameterObject recordParameterObject = new RecordParameterObject()
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = date,
+                Height = height,
+                Salary = salary,
+                Grade = grade,
+            };
+            fileCabinetService.EditRecord(id, recordParameterObject);
             Console.WriteLine("Record #{0} is updated.", id);
-            Console.WriteLine();
         }
 
         private static void Find(string parameters)
@@ -366,8 +421,8 @@ namespace FileCabinetApp
                 return;
             }
 
-            FileCabinetRecord[] findRecords = findOptions[index].Item2(arguments[ParametersIndex]);
-            if (findRecords.Length == 0)
+            ReadOnlyCollection<FileCabinetRecord> findRecords = findOptions[index].Item2(arguments[ParametersIndex]);
+            if (findRecords.Count == 0)
             {
                 Console.WriteLine($"No records was found");
             }
@@ -378,8 +433,6 @@ namespace FileCabinetApp
                     PrintRecordData(record);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private static void Exit(string parameters)
