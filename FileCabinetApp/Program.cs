@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 
 namespace FileCabinetApp
 {
@@ -25,10 +26,24 @@ namespace FileCabinetApp
 
         private static Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[] findOptions;
 
-        private static string[] validorsNames = new string[]
+        private static Tuple<string, Func<string, StreamWriter>>[] fileFormats
+            = new Tuple<string, Func<string, StreamWriter>>[]
+        {
+            new Tuple<string, Func<string, StreamWriter>>("csv", File.CreateText),
+        };
+
+        private static string[] validatorsNames = new string[]
         {
             "default",
             "custom",
+        };
+
+        private static Tuple<string, bool>[] yesNoStatements = new Tuple<string, bool>[]
+        {
+            new Tuple<string, bool>("y", true),
+            new Tuple<string, bool>("n", false),
+            new Tuple<string, bool>("yes", true),
+            new Tuple<string, bool>("no", false),
         };
 
         private static Tuple<string, string, Action<string>>[] commandLineArguments = new Tuple<string, string, Action<string>>[]
@@ -45,6 +60,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("list", List),
             new Tuple<string, Action<string>>("find", Find),
+            new Tuple<string, Action<string>>("export", Export),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -56,6 +72,7 @@ namespace FileCabinetApp
             new string[] { "edit", "edit existing record", "The 'edit' edit existing record, should contain wanted Id." },
             new string[] { "list", "show all records", "The 'list' command show all records." },
             new string[] { "find", "find record by parameters", "Type parametr you want to search for after 'find' command." },
+            new string[] { "export", "export records to file", "Type export, then csv or xml, then path you want to save your data to" },
         };
 
         /// <summary>
@@ -152,16 +169,16 @@ namespace FileCabinetApp
 
         private static void SetValidationRules(string validationRules)
         {
-            if (validationRules.Equals(validorsNames[0], StringComparison.OrdinalIgnoreCase))
+            if (validationRules.Equals(validatorsNames[0], StringComparison.OrdinalIgnoreCase))
             {
                 validator = new FileCabinetDefaultService();
-                System.Console.WriteLine($"Using {validorsNames[0]} validation rules.");
+                System.Console.WriteLine($"Using {validatorsNames[0]} validation rules.");
             }
 
-            if (validationRules.Equals(validorsNames[1], StringComparison.OrdinalIgnoreCase))
+            if (validationRules.Equals(validatorsNames[1], StringComparison.OrdinalIgnoreCase))
             {
                 validator = new FileCabinetCustomService();
-                System.Console.WriteLine($"Using {validorsNames[1]} validation rules.");
+                System.Console.WriteLine($"Using {validatorsNames[1]} validation rules.");
             }
 
             if (validator is null)
@@ -208,7 +225,7 @@ namespace FileCabinetApp
 
         private static Tuple<bool, string, string> StringConverter(string input)
         {
-            return new (true, string.Empty, input);
+            return new(true, string.Empty, input);
         }
 
         private static Tuple<bool, string, DateTime> DateConverter(string input)
@@ -224,13 +241,13 @@ namespace FileCabinetApp
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    return new (false, "invalid date", DateTime.Now);
+                    return new(false, "invalid date", DateTime.Now);
                 }
 
-                return new (true, string.Empty, dateOfBirth);
+                return new(true, string.Empty, dateOfBirth);
             }
 
-            return new (false, "invalid format, try mm/dd/yyyy", DateTime.Now);
+            return new(false, "invalid format, try mm/dd/yyyy", DateTime.Now);
         }
 
         private static Tuple<bool, string, short> HeightConverter(string input)
@@ -238,10 +255,10 @@ namespace FileCabinetApp
             short height;
             if (!short.TryParse(input, out height))
             {
-                return new (false, "failed to parse", 0);
+                return new(false, "failed to parse", 0);
             }
 
-            return new (true, string.Empty, height);
+            return new(true, string.Empty, height);
         }
 
         private static Tuple<bool, string, decimal> SalaryConverter(string input)
@@ -249,10 +266,10 @@ namespace FileCabinetApp
             decimal salary;
             if (!decimal.TryParse(input, out salary))
             {
-                return new (false, "failed to parse", 0);
+                return new(false, "failed to parse", 0);
             }
 
-            return new (true, string.Empty, salary);
+            return new(true, string.Empty, salary);
         }
 
         private static Tuple<bool, string, char> GradeConverter(string input)
@@ -262,12 +279,12 @@ namespace FileCabinetApp
             if (string.IsNullOrWhiteSpace(input) || input.Length > 1)
             {
                 grade = ' ';
-                return new (false, "should contain one symbol", grade);
+                return new(false, "should contain one symbol", grade);
             }
 
             grade = input[0];
 
-            return new (true, string.Empty, grade);
+            return new(true, string.Empty, grade);
         }
 
         private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)
@@ -432,6 +449,66 @@ namespace FileCabinetApp
                 {
                     PrintRecordData(record);
                 }
+            }
+        }
+
+        private static void Export(string parameters)
+        {
+            var arguments = parameters.Split(' ', 2);
+
+            var fileTypeIndex = Array.FindIndex(fileFormats, i => i.Item1.Equals(arguments[0], StringComparison.OrdinalIgnoreCase));
+
+            if (fileTypeIndex < 0)
+            {
+                Console.WriteLine($"There is no such parameter as '{arguments[0]}'");
+                return;
+            }
+
+            if (arguments.Length < 2)
+            {
+                Console.WriteLine($"Your argument should follow '{arguments[0]}' param");
+                return;
+            }
+
+            if (File.Exists(arguments[1]))
+            {
+                int index;
+                do
+                {
+                    System.Console.WriteLine($"File is exist - rewrite {arguments[1]} [Y/n]");
+                    var input = Console.ReadLine();
+                    index = Array.FindIndex(yesNoStatements, i => i.Item1.Equals(input, StringComparison.OrdinalIgnoreCase));
+                }
+                while (index < 0);
+
+                if (!yesNoStatements[index].Item2)
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                using (StreamWriter streamWriter = fileFormats[fileTypeIndex].Item2(arguments[1]))
+                {
+                    FileCabinetServiceSnapshot snapshot = fileCabinetService.GetSnapshot();
+                    switch (fileTypeIndex)
+                    {
+                        case 0:
+                            snapshot.SaveToCSV(streamWriter);
+                            break;
+                        case 1:
+                            snapshot.SaveToXML(streamWriter);
+                            break;
+                        default:
+                            System.Console.WriteLine("Failed to create file, no such directory");
+                            return;
+                    }
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                System.Console.WriteLine("Failed to create file, no such directory");
             }
         }
 

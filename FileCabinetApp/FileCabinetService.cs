@@ -184,6 +184,11 @@ namespace FileCabinetApp
             return this.recordsList.Count;
         }
 
+        public FileCabinetServiceSnapshot GetSnapshot()
+        {
+            return new FileCabinetServiceSnapshot(this.recordsList.ToArray());
+        }
+
         private void AddByDateOfBirthToDictionary(DateTime dateOfBirth, FileCabinetRecord record)
         {
             if (this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
