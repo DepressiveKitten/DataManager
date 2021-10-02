@@ -62,6 +62,10 @@ namespace FileCabinetApp
         /// <returns>Total amount of all records.</returns>
         public int GetStat();
 
+        /// <summary>
+        /// Get the snapshot of current state of service.
+        /// </summary>
+        /// <returns>snapshot of current state of service.</returns>
         public FileCabinetServiceSnapshot GetSnapshot();
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Xml;
 
 namespace FileCabinetApp
 {
@@ -30,12 +31,13 @@ namespace FileCabinetApp
             = new Tuple<string, Func<string, StreamWriter>>[]
         {
             new Tuple<string, Func<string, StreamWriter>>("csv", File.CreateText),
+            new Tuple<string, Func<string, StreamWriter>>("xml", File.CreateText),
         };
 
-        private static string[] validatorsNames = new string[]
+        private static Tuple<string, Func<IRecordValidator>>[] validatorsNames = new Tuple<string, Func<IRecordValidator>>[]
         {
-            "default",
-            "custom",
+            new Tuple<string, Func<IRecordValidator>>("default", () => new FileCabinetDefaultService()),
+            new Tuple<string, Func<IRecordValidator>>("custom", () => new FileCabinetDefaultService()),
         };
 
         private static Tuple<string, bool>[] yesNoStatements = new Tuple<string, bool>[]
@@ -169,22 +171,15 @@ namespace FileCabinetApp
 
         private static void SetValidationRules(string validationRules)
         {
-            if (validationRules.Equals(validatorsNames[0], StringComparison.OrdinalIgnoreCase))
-            {
-                validator = new FileCabinetDefaultService();
-                System.Console.WriteLine($"Using {validatorsNames[0]} validation rules.");
-            }
-
-            if (validationRules.Equals(validatorsNames[1], StringComparison.OrdinalIgnoreCase))
-            {
-                validator = new FileCabinetCustomService();
-                System.Console.WriteLine($"Using {validatorsNames[1]} validation rules.");
-            }
-
-            if (validator is null)
+            var index = Array.FindIndex(validatorsNames, i => i.Item1.Equals(validationRules, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
             {
                 System.Console.WriteLine($"{validationRules} is not proper validation rule");
+                return;
             }
+
+            validator = validatorsNames[index].Item2();
+            System.Console.WriteLine($"Using {validatorsNames[index].Item1} validation rules.");
         }
 
         private static void PrintMissedCommandInfo(string command)
@@ -225,7 +220,7 @@ namespace FileCabinetApp
 
         private static Tuple<bool, string, string> StringConverter(string input)
         {
-            return new(true, string.Empty, input);
+            return new (true, string.Empty, input);
         }
 
         private static Tuple<bool, string, DateTime> DateConverter(string input)
@@ -241,13 +236,13 @@ namespace FileCabinetApp
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    return new(false, "invalid date", DateTime.Now);
+                    return new (false, "invalid date", DateTime.Now);
                 }
 
-                return new(true, string.Empty, dateOfBirth);
+                return new (true, string.Empty, dateOfBirth);
             }
 
-            return new(false, "invalid format, try mm/dd/yyyy", DateTime.Now);
+            return new (false, "invalid format, try mm/dd/yyyy", DateTime.Now);
         }
 
         private static Tuple<bool, string, short> HeightConverter(string input)
@@ -255,10 +250,10 @@ namespace FileCabinetApp
             short height;
             if (!short.TryParse(input, out height))
             {
-                return new(false, "failed to parse", 0);
+                return new (false, "failed to parse", 0);
             }
 
-            return new(true, string.Empty, height);
+            return new (true, string.Empty, height);
         }
 
         private static Tuple<bool, string, decimal> SalaryConverter(string input)
@@ -266,10 +261,10 @@ namespace FileCabinetApp
             decimal salary;
             if (!decimal.TryParse(input, out salary))
             {
-                return new(false, "failed to parse", 0);
+                return new Tuple<bool, string, decimal>(false, "failed to parse", 0);
             }
 
-            return new(true, string.Empty, salary);
+            return new (true, string.Empty, salary);
         }
 
         private static Tuple<bool, string, char> GradeConverter(string input)
@@ -279,12 +274,12 @@ namespace FileCabinetApp
             if (string.IsNullOrWhiteSpace(input) || input.Length > 1)
             {
                 grade = ' ';
-                return new(false, "should contain one symbol", grade);
+                return new (false, "should contain one symbol", grade);
             }
 
             grade = input[0];
 
-            return new(true, string.Empty, grade);
+            return new (true, string.Empty, grade);
         }
 
         private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)
@@ -489,19 +484,19 @@ namespace FileCabinetApp
 
             try
             {
-                using (StreamWriter streamWriter = fileFormats[fileTypeIndex].Item2(arguments[1]))
+                using (StreamWriter writer = fileFormats[fileTypeIndex].Item2(arguments[1]))
                 {
                     FileCabinetServiceSnapshot snapshot = fileCabinetService.GetSnapshot();
                     switch (fileTypeIndex)
                     {
                         case 0:
-                            snapshot.SaveToCSV(streamWriter);
+                            snapshot.SaveToCSV(writer);
                             break;
                         case 1:
-                            snapshot.SaveToXML(streamWriter);
+                            snapshot.SaveToXML(writer);
                             break;
                         default:
-                            System.Console.WriteLine("Failed to create file, no such directory");
+                            System.Console.WriteLine("Failed to create file");
                             return;
                     }
                 }
