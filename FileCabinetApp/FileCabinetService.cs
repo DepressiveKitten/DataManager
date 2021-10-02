@@ -184,6 +184,15 @@ namespace FileCabinetApp
             return this.recordsList.Count;
         }
 
+        /// <summary>
+        /// Get the snapshot of current state of service.
+        /// </summary>
+        /// <returns>snapshot of current state of service.</returns>
+        public FileCabinetServiceSnapshot GetSnapshot()
+        {
+            return new FileCabinetServiceSnapshot(this.recordsList.ToArray());
+        }
+
         private void AddByDateOfBirthToDictionary(DateTime dateOfBirth, FileCabinetRecord record)
         {
             if (this.dateOfBirthDictionary.ContainsKey(dateOfBirth))

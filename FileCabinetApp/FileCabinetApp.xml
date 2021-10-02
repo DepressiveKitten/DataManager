@@ -145,6 +145,45 @@
             </summary>
             <value>Date of birth of the person.</value>
         </member>
+        <member name="T:FileCabinetApp.FileCabinetRecordCsvWriter">
+            <summary>
+            Saves given records as csv documents.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvWriter.#ctor(System.IO.TextWriter)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecordCsvWriter"/> class.
+            </summary>
+            <param name="writer">stream to save csv file to.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvWriter.Write(FileCabinetApp.FileCabinetRecord)">
+            <summary>
+            Add a new record to document.
+            </summary>
+            <param name="fileCabinetRecord">Record that should be added to document.</param>
+        </member>
+        <member name="T:FileCabinetApp.FileCabinetRecordXmlWriter">
+            <summary>
+            Saves given records as xml documents.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlWriter.#ctor(System.IO.StreamWriter)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecordXmlWriter"/> class.
+            </summary>
+            <param name="writer">stream to save xml file to.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlWriter.Write(FileCabinetApp.FileCabinetRecord)">
+            <summary>
+            Add a new record to document.
+            </summary>
+            <param name="fileCabinetRecord">Record that should be added to document.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlWriter.Save">
+            <summary>
+            Create a new document with all given records.
+            </summary>
+        </member>
         <member name="T:FileCabinetApp.FileCabinetService">
             <summary>
             Contains all records and process data.
@@ -210,6 +249,35 @@
             </summary>
             <returns>Total amount of all records.</returns>
         </member>
+        <member name="M:FileCabinetApp.FileCabinetService.GetSnapshot">
+            <summary>
+            Get the snapshot of current state of service.
+            </summary>
+            <returns>snapshot of current state of service.</returns>
+        </member>
+        <member name="T:FileCabinetApp.FileCabinetServiceSnapshot">
+            <summary>
+            Instance of state of service class.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.#ctor(FileCabinetApp.FileCabinetRecord[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetServiceSnapshot"/> class.
+            </summary>
+            <param name="records">Records that should be saved in snapshot.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.SaveToCSV(System.IO.StreamWriter)">
+            <summary>
+            Saves snapshot as csv document.
+            </summary>
+            <param name="writer">stream to save file to.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.SaveToXML(System.IO.StreamWriter)">
+            <summary>
+            Saves snapshot as xml document.
+            </summary>
+            <param name="writer">stream to save file to.</param>
+        </member>
         <member name="T:FileCabinetApp.IFileCabinetService">
             <summary>
             Cabinet Services interface.
@@ -268,6 +336,12 @@
             Return total amount of all records.
             </summary>
             <returns>Total amount of all records.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.GetSnapshot">
+            <summary>
+            Get the snapshot of current state of service.
+            </summary>
+            <returns>snapshot of current state of service.</returns>
         </member>
         <member name="T:FileCabinetApp.IRecordValidator">
             <summary>

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
+using System.Xml;
 
 namespace FileCabinetApp
 {
@@ -25,10 +27,25 @@ namespace FileCabinetApp
 
         private static Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[] findOptions;
 
-        private static string[] validorsNames = new string[]
+        private static Tuple<string, Func<string, StreamWriter>>[] fileFormats
+            = new Tuple<string, Func<string, StreamWriter>>[]
         {
-            "default",
-            "custom",
+            new Tuple<string, Func<string, StreamWriter>>("csv", File.CreateText),
+            new Tuple<string, Func<string, StreamWriter>>("xml", File.CreateText),
+        };
+
+        private static Tuple<string, Func<IRecordValidator>>[] validatorsNames = new Tuple<string, Func<IRecordValidator>>[]
+        {
+            new Tuple<string, Func<IRecordValidator>>("default", () => new FileCabinetDefaultService()),
+            new Tuple<string, Func<IRecordValidator>>("custom", () => new FileCabinetDefaultService()),
+        };
+
+        private static Tuple<string, bool>[] yesNoStatements = new Tuple<string, bool>[]
+        {
+            new Tuple<string, bool>("y", true),
+            new Tuple<string, bool>("n", false),
+            new Tuple<string, bool>("yes", true),
+            new Tuple<string, bool>("no", false),
         };
 
         private static Tuple<string, string, Action<string>>[] commandLineArguments = new Tuple<string, string, Action<string>>[]
@@ -45,6 +62,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("list", List),
             new Tuple<string, Action<string>>("find", Find),
+            new Tuple<string, Action<string>>("export", Export),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -56,6 +74,7 @@ namespace FileCabinetApp
             new string[] { "edit", "edit existing record", "The 'edit' edit existing record, should contain wanted Id." },
             new string[] { "list", "show all records", "The 'list' command show all records." },
             new string[] { "find", "find record by parameters", "Type parametr you want to search for after 'find' command." },
+            new string[] { "export", "export records to file", "Type export, then csv or xml, then path you want to save your data to" },
         };
 
         /// <summary>
@@ -152,22 +171,15 @@ namespace FileCabinetApp
 
         private static void SetValidationRules(string validationRules)
         {
-            if (validationRules.Equals(validorsNames[0], StringComparison.OrdinalIgnoreCase))
-            {
-                validator = new FileCabinetDefaultService();
-                System.Console.WriteLine($"Using {validorsNames[0]} validation rules.");
-            }
-
-            if (validationRules.Equals(validorsNames[1], StringComparison.OrdinalIgnoreCase))
-            {
-                validator = new FileCabinetCustomService();
-                System.Console.WriteLine($"Using {validorsNames[1]} validation rules.");
-            }
-
-            if (validator is null)
+            var index = Array.FindIndex(validatorsNames, i => i.Item1.Equals(validationRules, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
             {
                 System.Console.WriteLine($"{validationRules} is not proper validation rule");
+                return;
             }
+
+            validator = validatorsNames[index].Item2();
+            System.Console.WriteLine($"Using {validatorsNames[index].Item1} validation rules.");
         }
 
         private static void PrintMissedCommandInfo(string command)
@@ -249,7 +261,7 @@ namespace FileCabinetApp
             decimal salary;
             if (!decimal.TryParse(input, out salary))
             {
-                return new (false, "failed to parse", 0);
+                return new Tuple<bool, string, decimal>(false, "failed to parse", 0);
             }
 
             return new (true, string.Empty, salary);
@@ -432,6 +444,66 @@ namespace FileCabinetApp
                 {
                     PrintRecordData(record);
                 }
+            }
+        }
+
+        private static void Export(string parameters)
+        {
+            var arguments = parameters.Split(' ', 2);
+
+            var fileTypeIndex = Array.FindIndex(fileFormats, i => i.Item1.Equals(arguments[0], StringComparison.OrdinalIgnoreCase));
+
+            if (fileTypeIndex < 0)
+            {
+                Console.WriteLine($"There is no such parameter as '{arguments[0]}'");
+                return;
+            }
+
+            if (arguments.Length < 2)
+            {
+                Console.WriteLine($"Your argument should follow '{arguments[0]}' param");
+                return;
+            }
+
+            if (File.Exists(arguments[1]))
+            {
+                int index;
+                do
+                {
+                    System.Console.WriteLine($"File is exist - rewrite {arguments[1]} [Y/n]");
+                    var input = Console.ReadLine();
+                    index = Array.FindIndex(yesNoStatements, i => i.Item1.Equals(input, StringComparison.OrdinalIgnoreCase));
+                }
+                while (index < 0);
+
+                if (!yesNoStatements[index].Item2)
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                using (StreamWriter writer = fileFormats[fileTypeIndex].Item2(arguments[1]))
+                {
+                    FileCabinetServiceSnapshot snapshot = fileCabinetService.GetSnapshot();
+                    switch (fileTypeIndex)
+                    {
+                        case 0:
+                            snapshot.SaveToCSV(writer);
+                            break;
+                        case 1:
+                            snapshot.SaveToXML(writer);
+                            break;
+                        default:
+                            System.Console.WriteLine("Failed to create file");
+                            return;
+                    }
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                System.Console.WriteLine("Failed to create file, no such directory");
             }
         }
 
