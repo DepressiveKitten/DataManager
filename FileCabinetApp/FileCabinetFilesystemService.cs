@@ -4,7 +4,7 @@ using System.IO;
 
 namespace FileCabinetApp
 {
-    public class FileCabinetFilesystemService
+    public class FileCabinetFilesystemService : IFileCabinetService
     {
         private readonly IRecordValidator validator;
         private FileStream fileStream;
