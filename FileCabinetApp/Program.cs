@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
-using System.Xml;
 
 namespace FileCabinetApp
 {
@@ -159,7 +157,7 @@ namespace FileCabinetApp
                 SetValidationRules("default");
             }
 
-            fileCabinetService = new FileCabinetService(validator);
+            fileCabinetService = new FileCabinetMemoryService(validator);
 
             findOptions = new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[]
             {
