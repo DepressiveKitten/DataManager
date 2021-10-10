@@ -166,7 +166,9 @@ namespace FileCabinetApp
                 SetValidationRules("default");
             }
 
-            SetFileCabinetService(fileCabinetServiceNames[0]);
+
+            //TODO change default to memory after tests
+            SetFileCabinetService(fileCabinetServiceNames[1]);
 
             findOptions = new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[]
             {
@@ -225,7 +227,7 @@ namespace FileCabinetApp
 
                 case 1:
                     {
-                        fileCabinetService = new FileCabinetFilesystemService(new FileStream("FileCabinetFilesystemService.txt", FileMode.OpenOrCreate),validator);
+                        fileCabinetService = new FileCabinetFilesystemService(new FileStream("FileCabinetFilesystemService.txt", FileMode.OpenOrCreate, FileAccess.ReadWrite), validator);
                         break;
                     }
 
@@ -397,8 +399,8 @@ namespace FileCabinetApp
                 Salary = salary,
                 Grade = grade,
             };
-            fileCabinetService.CreateRecord(recordParameterObject);
-            Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
+            int id = fileCabinetService.CreateRecord(recordParameterObject);
+            Console.WriteLine("Record #{0} is created.", id);
         }
 
         private static void PrintRecordData(FileCabinetRecord record)

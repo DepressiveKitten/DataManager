@@ -6,13 +6,20 @@ namespace FileCabinetApp
 {
     public class FileCabinetFilesystemService : IFileCabinetService
     {
+        private const int LenghtOfStringInFile = 60;
+        private const int LengthOfRecordInFile = (LenghtOfStringInFile * 2) + (sizeof(short) * 2) + (sizeof(int) * 4) + sizeof(decimal) + sizeof(char);
         private readonly IRecordValidator validator;
-        private FileStream fileStream;
+        private readonly BinaryWriter writer;
+        private readonly FileStream fileStream;
+        private int nextId;
 
         public FileCabinetFilesystemService(FileStream fileStream, IRecordValidator validator)
         {
             this.validator = validator;
             this.fileStream = fileStream;
+            this.writer = new BinaryWriter(fileStream);
+            //TODO read all id from file and set to last
+            this.nextId = 1;
         }
 
         /// <summary>
@@ -22,7 +29,29 @@ namespace FileCabinetApp
         /// <returns>Id of added record.</returns>
         public int CreateRecord(RecordParameterObject recordParameter)
         {
-            throw new NotImplementedException();
+            if (recordParameter is null)
+            {
+                throw new ArgumentNullException(nameof(recordParameter));
+            }
+
+            this.validator.ValidateParameters(recordParameter);
+
+            this.writer.Seek(0, SeekOrigin.End);
+
+            this.writer.Write((short)0);
+            this.writer.Write(this.nextId);
+            string bufferString = new string('\0', LenghtOfStringInFile);
+            this.writer.Write(bufferString.Insert(0, recordParameter.FirstName));
+            this.writer.Write(bufferString.Insert(0, recordParameter.LastName));
+            this.writer.Write(recordParameter.DateOfBirth.Year);
+            this.writer.Write(recordParameter.DateOfBirth.Month);
+            this.writer.Write(recordParameter.DateOfBirth.Day);
+            this.writer.Write(recordParameter.Height);
+            this.writer.Write(recordParameter.Salary);
+            this.writer.Write(recordParameter.Grade);
+            this.writer.Flush();
+
+            return this.nextId++;
         }
 
         /// <summary>
