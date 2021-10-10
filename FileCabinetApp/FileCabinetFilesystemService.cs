@@ -1,15 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 
 namespace FileCabinetApp
 {
     public class FileCabinetFilesystemService : IFileCabinetService
     {
+        //TODO review all documentation
+        private const char stringBufferDefaultValue = '!';
         private const int LenghtOfStringInFile = 60;
-        private const int LengthOfRecordInFile = (LenghtOfStringInFile * 2) + (sizeof(short) * 2) + (sizeof(int) * 4) + sizeof(decimal) + sizeof(char);
+        private const int LengthOfRecordInFile = (LenghtOfStringInFile * 2) + (sizeof(short) * 2) + (sizeof(int) * 4) + sizeof(decimal) + sizeof(char) - 1;
         private readonly IRecordValidator validator;
         private readonly BinaryWriter writer;
+        private readonly BinaryReader reader;
         private readonly FileStream fileStream;
         private int nextId;
 
@@ -17,7 +22,8 @@ namespace FileCabinetApp
         {
             this.validator = validator;
             this.fileStream = fileStream;
-            this.writer = new BinaryWriter(fileStream);
+            this.writer = new BinaryWriter(fileStream, System.Text.Encoding.UTF8);
+            this.reader = new BinaryReader(this.fileStream, System.Text.Encoding.UTF8);
             //TODO read all id from file and set to last
             this.nextId = 1;
         }
@@ -40,9 +46,12 @@ namespace FileCabinetApp
 
             this.writer.Write((short)0);
             this.writer.Write(this.nextId);
-            string bufferString = new string('\0', LenghtOfStringInFile);
-            this.writer.Write(bufferString.Insert(0, recordParameter.FirstName));
-            this.writer.Write(bufferString.Insert(0, recordParameter.LastName));
+            char[] bufferCharArray = Enumerable.Repeat(stringBufferDefaultValue, LenghtOfStringInFile).ToArray();
+            recordParameter.FirstName.CopyTo(0, bufferCharArray, 0, recordParameter.FirstName.Length);
+            this.writer.Write(bufferCharArray);
+            bufferCharArray = Enumerable.Repeat(stringBufferDefaultValue, LenghtOfStringInFile).ToArray();
+            recordParameter.LastName.CopyTo(0, bufferCharArray, 0, recordParameter.LastName.Length);
+            this.writer.Write(bufferCharArray);
             this.writer.Write(recordParameter.DateOfBirth.Year);
             this.writer.Write(recordParameter.DateOfBirth.Month);
             this.writer.Write(recordParameter.DateOfBirth.Day);
@@ -70,7 +79,34 @@ namespace FileCabinetApp
         /// <returns>List with all records.</returns>
         public ReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
-            throw new NotImplementedException();
+            this.fileStream.Seek(0, SeekOrigin.Begin);
+            List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
+            for (int i = 0; i < this.fileStream.Length / LengthOfRecordInFile; i++)
+            {
+                this.reader.ReadInt16();
+                var id = this.reader.ReadInt32();
+                char[] charBuffer = this.reader.ReadChars(LenghtOfStringInFile);
+                string firstName = new string(charBuffer[0..new string(charBuffer).IndexOf(stringBufferDefaultValue, StringComparison.Ordinal)]);
+                charBuffer = this.reader.ReadChars(LenghtOfStringInFile);
+                string lastName = new string(charBuffer[0..new string(charBuffer).IndexOf(stringBufferDefaultValue, StringComparison.Ordinal)]);
+                DateTime dateOfBirth = new DateTime(this.reader.ReadInt32(), this.reader.ReadInt32(), this.reader.ReadInt32());
+                var height = this.reader.ReadInt16();
+                decimal salary = this.reader.ReadDecimal();
+                var grade = this.reader.ReadChar();
+                FileCabinetRecord record = new FileCabinetRecord
+                {
+                    Id = id,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    DateOfBirth = dateOfBirth,
+                    Height = height,
+                    Salary = salary,
+                    Grade = grade,
+                };
+                recordsList.Add(record);
+            }
+
+            return recordsList.AsReadOnly();
         }
 
         /// <summary>
