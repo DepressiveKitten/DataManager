@@ -155,7 +155,7 @@ namespace FileCabinetApp
         /// <returns>Total amount of all records.</returns>
         public int GetStat()
         {
-            throw new NotImplementedException();
+            return (int)this.fileStream.Length / LengthOfRecordInFile;
         }
 
         /// <summary>
