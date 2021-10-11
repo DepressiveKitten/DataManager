@@ -9,9 +9,10 @@ namespace FileCabinetApp
     public class FileCabinetFilesystemService : IFileCabinetService
     {
         //TODO review all documentation
-        private const char stringBufferDefaultValue = '!';
+        private const char StringBufferDefaultValue = '!';
         private const int LenghtOfStringInFile = 60;
         private const int LengthOfRecordInFile = (LenghtOfStringInFile * 2) + (sizeof(short) * 2) + (sizeof(int) * 4) + sizeof(decimal) + sizeof(char) - 1;
+        private const int IdOffsetInWrittenRecord = sizeof(short);
         private readonly IRecordValidator validator;
         private readonly BinaryWriter writer;
         private readonly BinaryReader reader;
@@ -42,23 +43,7 @@ namespace FileCabinetApp
 
             this.validator.ValidateParameters(recordParameter);
 
-            this.writer.Seek(0, SeekOrigin.End);
-
-            this.writer.Write((short)0);
-            this.writer.Write(this.nextId);
-            char[] bufferCharArray = Enumerable.Repeat(stringBufferDefaultValue, LenghtOfStringInFile).ToArray();
-            recordParameter.FirstName.CopyTo(0, bufferCharArray, 0, recordParameter.FirstName.Length);
-            this.writer.Write(bufferCharArray);
-            bufferCharArray = Enumerable.Repeat(stringBufferDefaultValue, LenghtOfStringInFile).ToArray();
-            recordParameter.LastName.CopyTo(0, bufferCharArray, 0, recordParameter.LastName.Length);
-            this.writer.Write(bufferCharArray);
-            this.writer.Write(recordParameter.DateOfBirth.Year);
-            this.writer.Write(recordParameter.DateOfBirth.Month);
-            this.writer.Write(recordParameter.DateOfBirth.Day);
-            this.writer.Write(recordParameter.Height);
-            this.writer.Write(recordParameter.Salary);
-            this.writer.Write(recordParameter.Grade);
-            this.writer.Flush();
+            this.WriteRecord(SeekOrigin.End, 0, this.nextId, recordParameter, 0);
 
             return this.nextId++;
         }
@@ -70,7 +55,20 @@ namespace FileCabinetApp
         /// <param name="recordParameter">Data that should be edited in record.</param>
         public void EditRecord(int id, RecordParameterObject recordParameter)
         {
-            throw new NotImplementedException();
+            if (recordParameter is null)
+            {
+                throw new ArgumentNullException(nameof(recordParameter));
+            }
+
+            int offset = this.GetRecordOffset(id);
+            if (offset < 0)
+            {
+                throw new ArgumentException(id + " record is not existing", nameof(id));
+            }
+
+            this.validator.ValidateParameters(recordParameter);
+
+            WriteRecord(SeekOrigin.Begin, offset, id, recordParameter, 0);
         }
 
         /// <summary>
@@ -83,27 +81,7 @@ namespace FileCabinetApp
             List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
             for (int i = 0; i < this.fileStream.Length / LengthOfRecordInFile; i++)
             {
-                this.reader.ReadInt16();
-                var id = this.reader.ReadInt32();
-                char[] charBuffer = this.reader.ReadChars(LenghtOfStringInFile);
-                string firstName = new string(charBuffer[0..new string(charBuffer).IndexOf(stringBufferDefaultValue, StringComparison.Ordinal)]);
-                charBuffer = this.reader.ReadChars(LenghtOfStringInFile);
-                string lastName = new string(charBuffer[0..new string(charBuffer).IndexOf(stringBufferDefaultValue, StringComparison.Ordinal)]);
-                DateTime dateOfBirth = new DateTime(this.reader.ReadInt32(), this.reader.ReadInt32(), this.reader.ReadInt32());
-                var height = this.reader.ReadInt16();
-                decimal salary = this.reader.ReadDecimal();
-                var grade = this.reader.ReadChar();
-                FileCabinetRecord record = new FileCabinetRecord
-                {
-                    Id = id,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    DateOfBirth = dateOfBirth,
-                    Height = height,
-                    Salary = salary,
-                    Grade = grade,
-                };
-                recordsList.Add(record);
+                recordsList.Add(this.ReadRecord(SeekOrigin.Begin, i * LengthOfRecordInFile));
             }
 
             return recordsList.AsReadOnly();
@@ -116,7 +94,13 @@ namespace FileCabinetApp
         /// <returns>Record with given id.</returns>
         public FileCabinetRecord GetRecord(int id)
         {
-            throw new NotImplementedException();
+            int offset = this.GetRecordOffset(id);
+            if (offset < 0)
+            {
+                return null;
+            }
+
+            return this.ReadRecord(SeekOrigin.Begin, offset);
         }
 
         /// <summary>
@@ -165,6 +149,66 @@ namespace FileCabinetApp
         public FileCabinetServiceSnapshot GetSnapshot()
         {
             throw new NotImplementedException();
+        }
+
+        private void WriteRecord(SeekOrigin origin, int offset, int id, RecordParameterObject recordParameter, short status)
+        {
+            this.writer.Seek(offset, origin);
+
+            this.writer.Write(status);
+            this.writer.Write(id);
+            char[] bufferCharArray = Enumerable.Repeat(StringBufferDefaultValue, LenghtOfStringInFile).ToArray();
+            recordParameter.FirstName.CopyTo(0, bufferCharArray, 0, recordParameter.FirstName.Length);
+            this.writer.Write(bufferCharArray);
+            bufferCharArray = Enumerable.Repeat(StringBufferDefaultValue, LenghtOfStringInFile).ToArray();
+            recordParameter.LastName.CopyTo(0, bufferCharArray, 0, recordParameter.LastName.Length);
+            this.writer.Write(bufferCharArray);
+            this.writer.Write(recordParameter.DateOfBirth.Year);
+            this.writer.Write(recordParameter.DateOfBirth.Month);
+            this.writer.Write(recordParameter.DateOfBirth.Day);
+            this.writer.Write(recordParameter.Height);
+            this.writer.Write(recordParameter.Salary);
+            this.writer.Write(recordParameter.Grade);
+            this.writer.Flush();
+        }
+
+        private FileCabinetRecord ReadRecord(SeekOrigin origin, int offset)
+        {
+            this.fileStream.Seek(offset, origin);
+            this.reader.ReadInt16();
+            var id = this.reader.ReadInt32();
+            char[] charBuffer = this.reader.ReadChars(LenghtOfStringInFile);
+            string firstName = new string(charBuffer[0..new string(charBuffer).IndexOf(StringBufferDefaultValue, StringComparison.Ordinal)]);
+            charBuffer = this.reader.ReadChars(LenghtOfStringInFile);
+            string lastName = new string(charBuffer[0..new string(charBuffer).IndexOf(StringBufferDefaultValue, StringComparison.Ordinal)]);
+            DateTime dateOfBirth = new DateTime(this.reader.ReadInt32(), this.reader.ReadInt32(), this.reader.ReadInt32());
+            var height = this.reader.ReadInt16();
+            decimal salary = this.reader.ReadDecimal();
+            var grade = this.reader.ReadChar();
+            return new FileCabinetRecord
+            {
+                Id = id,
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = dateOfBirth,
+                Height = height,
+                Salary = salary,
+                Grade = grade,
+            };
+        }
+
+        private int GetRecordOffset(int id)
+        {
+            this.fileStream.Seek(IdOffsetInWrittenRecord, SeekOrigin.Begin);
+            for (int i = 0; i < this.fileStream.Length / LengthOfRecordInFile; i++, this.reader.ReadBytes(LengthOfRecordInFile - sizeof(int)))
+            {
+                if (this.reader.ReadInt32() == id)
+                {
+                    return i * LengthOfRecordInFile;
+                }
+            }
+
+            return -1;
         }
     }
 }
