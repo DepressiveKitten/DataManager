@@ -166,9 +166,7 @@ namespace FileCabinetApp
                 SetValidationRules("default");
             }
 
-
-            //TODO change default to memory after tests
-            SetFileCabinetService(fileCabinetServiceNames[1]);
+            SetFileCabinetService(fileCabinetServiceNames[0]);
 
             findOptions = new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[]
             {
@@ -233,7 +231,6 @@ namespace FileCabinetApp
 
                 default:
                     {
-
                         break;
                     }
             }

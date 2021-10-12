@@ -6,31 +6,55 @@ using System.Linq;
 
 namespace FileCabinetApp
 {
-    public class FileCabinetFilesystemService : IFileCabinetService
+    /// <summary>
+    /// Stores all records in file and process data.
+    /// </summary>
+    public class FileCabinetFilesystemService : IFileCabinetService, IDisposable
     {
-        //TODO review all documentation
         private const char StringBufferDefaultValue = '!';
         private const int LenghtOfStringInFile = 60;
         private const int LengthOfRecordInFile = (LenghtOfStringInFile * 2) + (sizeof(short) * 2) + (sizeof(int) * 4) + sizeof(decimal) + sizeof(char) - 1;
         private const int IdOffsetInWrittenRecord = sizeof(short);
+        private static readonly StringComparer DictionaryComparer = StringComparer.OrdinalIgnoreCase;
         private readonly IRecordValidator validator;
         private readonly BinaryWriter writer;
         private readonly BinaryReader reader;
         private readonly FileStream fileStream;
+        private readonly Dictionary<string, List<int>> firstNameDictionary = new Dictionary<string, List<int>>(DictionaryComparer);
+        private readonly Dictionary<string, List<int>> lastNameDictionary = new Dictionary<string, List<int>>(DictionaryComparer);
+        private readonly Dictionary<DateTime, List<int>> dateOfBirthDictionary = new Dictionary<DateTime, List<int>>();
         private int nextId;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileCabinetFilesystemService"/> class.
+        /// </summary>
+        /// <param name="fileStream">file to store records in.</param>
+        /// <param name="validator">validator that will be used in current service.</param>
         public FileCabinetFilesystemService(FileStream fileStream, IRecordValidator validator)
         {
             this.validator = validator;
             this.fileStream = fileStream;
             this.writer = new BinaryWriter(fileStream, System.Text.Encoding.UTF8);
             this.reader = new BinaryReader(this.fileStream, System.Text.Encoding.UTF8);
-            //TODO read all id from file and set to last
-            this.nextId = 1;
+
+            this.nextId = 0;
+            for (int i = 0; i < this.fileStream.Length / LengthOfRecordInFile; i++)
+            {
+                this.fileStream.Seek(IdOffsetInWrittenRecord + (i * LengthOfRecordInFile), SeekOrigin.Begin);
+                var id = this.reader.ReadInt32();
+                if (id > this.nextId)
+                {
+                    this.nextId = id;
+                }
+
+                this.AddToDictionary(null, null, null, i * LengthOfRecordInFile);
+            }
+
+            this.nextId += 1;
         }
 
         /// <summary>
-        /// Create a new record and adds it to the list.
+        /// Adds new record to the file.
         /// </summary>
         /// <param name="recordParameter">Data that should be stored in new record.</param>
         /// <returns>Id of added record.</returns>
@@ -44,12 +68,12 @@ namespace FileCabinetApp
             this.validator.ValidateParameters(recordParameter);
 
             this.WriteRecord(SeekOrigin.End, 0, this.nextId, recordParameter, 0);
-
+            this.AddToDictionary(null, null, null, (int)this.fileStream.Length - LengthOfRecordInFile);
             return this.nextId++;
         }
 
         /// <summary>
-        /// Create a new record and adds it to the list.
+        /// Edit existing record.
         /// </summary>
         /// <param name="id">Id of record you want to edit.</param>
         /// <param name="recordParameter">Data that should be edited in record.</param>
@@ -68,7 +92,9 @@ namespace FileCabinetApp
 
             this.validator.ValidateParameters(recordParameter);
 
-            WriteRecord(SeekOrigin.Begin, offset, id, recordParameter, 0);
+            FileCabinetRecord lastRecord = this.ReadRecord(SeekOrigin.Begin, offset);
+            this.WriteRecord(SeekOrigin.Begin, offset, id, recordParameter, 0);
+            this.AddToDictionary(lastRecord.FirstName, lastRecord.LastName, lastRecord.DateOfBirth, offset);
         }
 
         /// <summary>
@@ -110,7 +136,18 @@ namespace FileCabinetApp
         /// <returns>List of all record with given first name.</returns>
         public ReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
         {
-            throw new NotImplementedException();
+            if (!this.firstNameDictionary.ContainsKey(firstName))
+            {
+                return new List<FileCabinetRecord>().AsReadOnly();
+            }
+
+            List<FileCabinetRecord> records = new List<FileCabinetRecord>();
+            foreach (int offset in this.firstNameDictionary[firstName])
+            {
+                records.Add(this.ReadRecord(SeekOrigin.Begin, offset));
+            }
+
+            return records.AsReadOnly();
         }
 
         /// <summary>
@@ -120,7 +157,18 @@ namespace FileCabinetApp
         /// <returns>List of all record with given Last name.</returns>
         public ReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
-            throw new NotImplementedException();
+            if (!this.lastNameDictionary.ContainsKey(lastName))
+            {
+                return new List<FileCabinetRecord>().AsReadOnly();
+            }
+
+            List<FileCabinetRecord> records = new List<FileCabinetRecord>();
+            foreach (int offset in this.lastNameDictionary[lastName])
+            {
+                records.Add(this.ReadRecord(SeekOrigin.Begin, offset));
+            }
+
+            return records.AsReadOnly();
         }
 
         /// <summary>
@@ -130,7 +178,24 @@ namespace FileCabinetApp
         /// <returns>List of all record with given date of birth.</returns>
         public ReadOnlyCollection<FileCabinetRecord> FindByDate(string dateOfBirth)
         {
-            throw new NotImplementedException();
+            DateTime date;
+            if (!DateTime.TryParse(dateOfBirth, out date))
+            {
+                return new List<FileCabinetRecord>().AsReadOnly();
+            }
+
+            if (!this.dateOfBirthDictionary.ContainsKey(date))
+            {
+                return new List<FileCabinetRecord>().AsReadOnly();
+            }
+
+            List<FileCabinetRecord> records = new List<FileCabinetRecord>();
+            foreach (int offset in this.dateOfBirthDictionary[date])
+            {
+                records.Add(this.ReadRecord(SeekOrigin.Begin, offset));
+            }
+
+            return records.AsReadOnly();
         }
 
         /// <summary>
@@ -149,6 +214,28 @@ namespace FileCabinetApp
         public FileCabinetServiceSnapshot GetSnapshot()
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Dispose object resourses.
+        /// </summary>
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Dispose opened reader and writer streams.
+        /// </summary>
+        /// <param name="disposing">if streams should be disposed.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.reader.Dispose();
+                this.writer.Dispose();
+            }
         }
 
         private void WriteRecord(SeekOrigin origin, int offset, int id, RecordParameterObject recordParameter, short status)
@@ -209,6 +296,53 @@ namespace FileCabinetApp
             }
 
             return -1;
+        }
+
+        private void AddToDictionary(string previousFirstName, string previousLastName, DateTime? previousDateOfBirth, int offset)
+        {
+            FileCabinetRecord record = this.ReadRecord(SeekOrigin.Begin, offset);
+
+            if (previousFirstName != null)
+            {
+                this.firstNameDictionary[previousFirstName].Remove(offset);
+            }
+
+            if (this.firstNameDictionary.ContainsKey(record.FirstName))
+            {
+                this.firstNameDictionary[record.FirstName].Add(offset);
+            }
+            else
+            {
+                this.firstNameDictionary[record.FirstName] = new List<int>() { offset };
+            }
+
+            if (previousLastName != null)
+            {
+                this.lastNameDictionary[previousLastName].Remove(offset);
+            }
+
+            if (this.lastNameDictionary.ContainsKey(record.LastName))
+            {
+                this.lastNameDictionary[record.LastName].Add(offset);
+            }
+            else
+            {
+                this.lastNameDictionary[record.LastName] = new List<int>() { offset };
+            }
+
+            if (previousDateOfBirth != null)
+            {
+                this.dateOfBirthDictionary[(DateTime)previousDateOfBirth].Remove(offset);
+            }
+
+            if (this.dateOfBirthDictionary.ContainsKey(record.DateOfBirth))
+            {
+                this.dateOfBirthDictionary[record.DateOfBirth].Add(offset);
+            }
+            else
+            {
+                this.dateOfBirthDictionary[record.DateOfBirth] = new List<int>() { offset };
+            }
         }
     }
 }

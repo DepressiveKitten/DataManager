@@ -98,16 +98,28 @@
             <param name="grade">char that should be validating.</param>
             <returns>result of validation and error message if validation fails.</returns>
         </member>
+        <member name="T:FileCabinetApp.FileCabinetFilesystemService">
+            <summary>
+            Stores all records in file and process data.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetFilesystemService.#ctor(System.IO.FileStream,FileCabinetApp.IRecordValidator)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetFilesystemService"/> class.
+            </summary>
+            <param name="fileStream">file to store records in.</param>
+            <param name="validator">validator that will be used in current service.</param>
+        </member>
         <member name="M:FileCabinetApp.FileCabinetFilesystemService.CreateRecord(FileCabinetApp.RecordParameterObject)">
             <summary>
-            Create a new record and adds it to the list.
+            Adds new record to the file.
             </summary>
             <param name="recordParameter">Data that should be stored in new record.</param>
             <returns>Id of added record.</returns>
         </member>
         <member name="M:FileCabinetApp.FileCabinetFilesystemService.EditRecord(System.Int32,FileCabinetApp.RecordParameterObject)">
             <summary>
-            Create a new record and adds it to the list.
+            Edit existing record.
             </summary>
             <param name="id">Id of record you want to edit.</param>
             <param name="recordParameter">Data that should be edited in record.</param>
@@ -157,6 +169,17 @@
             Get the snapshot of current state of service.
             </summary>
             <returns>snapshot of current state of service.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetFilesystemService.Dispose">
+            <summary>
+            Dispose object resourses.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetFilesystemService.Dispose(System.Boolean)">
+            <summary>
+            Dispose opened reader and writer streams.
+            </summary>
+            <param name="disposing">if streams should be disposed.</param>
         </member>
         <member name="T:FileCabinetApp.FileCabinetMemoryService">
             <summary>
