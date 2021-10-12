@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
-using System.Xml;
 
 namespace FileCabinetApp
 {
@@ -15,6 +13,7 @@ namespace FileCabinetApp
         private const string DeveloperName = "Dmitriy Lopatin";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
         private const string OutputDateFormat = "yyyy-MMM-d";
+
         private const int CommandHelpIndex = 0;
         private const int DescriptionHelpIndex = 1;
         private const int ExplanationHelpIndex = 2;
@@ -22,6 +21,7 @@ namespace FileCabinetApp
         private const int CommandIndex = 0;
         private static IFileCabinetService fileCabinetService;
         private static IRecordValidator validator;
+        private static int fileCabinetServiceName = -1;
 
         private static bool isRunning = true;
 
@@ -40,6 +40,12 @@ namespace FileCabinetApp
             new Tuple<string, Func<IRecordValidator>>("custom", () => new FileCabinetDefaultService()),
         };
 
+        private static string[] fileCabinetServiceNames = new string[]
+        {
+            "memory",
+            "file",
+        };
+
         private static Tuple<string, bool>[] yesNoStatements = new Tuple<string, bool>[]
         {
             new Tuple<string, bool>("y", true),
@@ -51,6 +57,7 @@ namespace FileCabinetApp
         private static Tuple<string, string, Action<string>>[] commandLineArguments = new Tuple<string, string, Action<string>>[]
         {
             new Tuple<string, string, Action<string>>("--validation-rules", "-v", SetValidationRules),
+            new Tuple<string, string, Action<string>>("--storage", "-s", SetFileCabinetService),
         };
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
@@ -159,7 +166,7 @@ namespace FileCabinetApp
                 SetValidationRules("default");
             }
 
-            fileCabinetService = new FileCabinetService(validator);
+            SetFileCabinetService(fileCabinetServiceNames[0]);
 
             findOptions = new Tuple<string, Func<string, ReadOnlyCollection<FileCabinetRecord>>>[]
             {
@@ -180,6 +187,55 @@ namespace FileCabinetApp
 
             validator = validatorsNames[index].Item2();
             System.Console.WriteLine($"Using {validatorsNames[index].Item1} validation rules.");
+        }
+
+        private static void SetFileCabinetService(string argumentServiceName)
+        {
+            var index = Array.FindIndex(fileCabinetServiceNames, i => i.Equals(argumentServiceName, StringComparison.OrdinalIgnoreCase));
+            if (fileCabinetServiceName < 0)
+            {
+                if (index < 0)
+                {
+                    System.Console.WriteLine($"{argumentServiceName} is not proper file cabinet service name");
+                    fileCabinetServiceName = 0;
+                }
+                else
+                {
+                    fileCabinetServiceName = index;
+                }
+            }
+
+            if (validator is null)
+            {
+                return;
+            }
+
+            if (!(fileCabinetService is null))
+            {
+                return;
+            }
+
+            switch (fileCabinetServiceName)
+            {
+                case 0:
+                    {
+                        fileCabinetService = new FileCabinetMemoryService(validator);
+                        break;
+                    }
+
+                case 1:
+                    {
+                        fileCabinetService = new FileCabinetFilesystemService(new FileStream("FileCabinetFilesystemService.txt", FileMode.OpenOrCreate, FileAccess.ReadWrite), validator);
+                        break;
+                    }
+
+                default:
+                    {
+                        break;
+                    }
+            }
+
+            System.Console.WriteLine($"Using {fileCabinetServiceNames[fileCabinetServiceName]} cabinet service.");
         }
 
         private static void PrintMissedCommandInfo(string command)
@@ -340,8 +396,8 @@ namespace FileCabinetApp
                 Salary = salary,
                 Grade = grade,
             };
-            fileCabinetService.CreateRecord(recordParameterObject);
-            Console.WriteLine("Record #{0} is created.", Program.fileCabinetService.GetStat());
+            int id = fileCabinetService.CreateRecord(recordParameterObject);
+            Console.WriteLine("Record #{0} is created.", id);
         }
 
         private static void PrintRecordData(FileCabinetRecord record)
