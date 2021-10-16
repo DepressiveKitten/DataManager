@@ -59,7 +59,7 @@ namespace FileCabinetGenerator
                 recordsAmount = defaultRecordsAmount;
                 Console.WriteLine($"Invalid records amount, set to default = {defaultRecordsAmount}");
             }
-            if (startId <= 0 && startId > int.MaxValue - recordsAmount)
+            if (startId <= 0 || startId > int.MaxValue - recordsAmount)
             {
                 startId = defaultStartId;
                 Console.WriteLine($"Invalid start id, set to default = {defaultStartId}");
@@ -67,18 +67,18 @@ namespace FileCabinetGenerator
             if (chosenFileFormat <= 0)
             {
                 chosenFileFormat = defaultFileFormat;
-                Console.WriteLine($"Invalid file format, set to default: {fileFormats[0][defaultFileFormat]}");
+                Console.WriteLine($"Invalid file format, set to default: {fileFormats[defaultFileFormat][0]}");
             }
             if (fileName is null)
             {
-                fileName = fileFormats[1][chosenFileFormat];
-                Console.WriteLine($"Invalid name of file, set to default: {fileFormats[1][chosenFileFormat]}");
+                fileName = fileFormats[chosenFileFormat][1];
+                Console.WriteLine($"Invalid name of file, set to default: {fileFormats[defaultFileFormat][1]}");
             }
 
-            if(!fileName.EndsWith(fileFormats[0][chosenFileFormat]))
+            if(!fileName.EndsWith(fileFormats[chosenFileFormat][0]))
             {
-                fileName = fileFormats[1][chosenFileFormat];
-                Console.WriteLine($"Name of file should end with .{fileFormats[0][chosenFileFormat]}, changed to default: {fileFormats[1][chosenFileFormat]}");
+                fileName = fileFormats[chosenFileFormat][1];
+                Console.WriteLine($"Name of file should end with .{fileFormats[chosenFileFormat][0]}, changed to default: {fileFormats[chosenFileFormat][1]}");
             }
 
             if (File.Exists(fileName))
