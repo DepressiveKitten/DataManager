@@ -7,15 +7,22 @@ namespace FileCabinetGenerator
 {
     public static class Program
     {
+        private const int gradesAmount = (int)'Z' - (int)'A';
+        private const int minHeight = 100;
+        private const int maxHeight = 220;
+
+        private const int defaultRecordsAmount = 100;
+        private const int defaultStartId = 1;
+        private const int defaultFileFormat = 1;
+
         private static FileCabinetServiceSnapshot snapshot;
         private static StreamWriter writer;
         private static string fileName = null;
         private static int recordsAmount = -1;
         private static int startId = -1;
         private static int chosenFileFormat = -1;
-        private static int defaultRecordsAmount = 100;
-        private static int defaultStartId = 1;
-        private static int defaultFileFormat = 1;
+        private static List<string> firstNames = new List<string>();
+        private static List<string> lastNames = new List<string>();
 
         private static Tuple<string, string, Action<string>>[] commandLineArguments = new Tuple<string, string, Action<string>>[]
         {
@@ -43,13 +50,52 @@ namespace FileCabinetGenerator
         static void Main(string[] args)
         {
             ProcessCommandLineArgs(args);
-            if(!ValidateArguments())
+            if (!ValidateArguments())
             {
                 return;
             }
 
-            //List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
-            //for(int i = 0; i < )
+            FillNamesList();
+
+            List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
+            for (int id = startId; id < startId + recordsAmount; id++)
+            {
+                Random random = new Random();
+
+                DateTime date = new DateTime(1950, 1, 1);
+                int range = (DateTime.Today - date).Days;
+                date = date.AddDays(random.Next(range));
+
+                FileCabinetRecord record = new FileCabinetRecord()
+                {
+                    Id = id,
+                    FirstName = firstNames[random.Next(firstNames.Count)],
+                    LastName = lastNames[random.Next(lastNames.Count)],
+                    DateOfBirth = date,
+                    Salary = (decimal)(random.NextDouble() * random.Next(10000)),
+                    Grade = (char)(random.Next(gradesAmount) + (int)'A'),
+                    Height = (short)random.Next(minHeight, maxHeight),
+                };
+                recordsList.Add(record);
+            }
+        }
+
+        private static void FillNamesList()
+        {
+            using (StreamReader reader = new StreamReader("First.txt"))
+            {
+                while (reader.Peek() >= 0)
+                {
+                    firstNames.Add(reader.ReadLine());
+                }
+            }
+            using (StreamReader reader = new StreamReader("Last.txt"))
+            {
+                while (reader.Peek() >= 0)
+                {
+                    lastNames.Add(reader.ReadLine());
+                }
+            }
         }
 
         private static bool ValidateArguments()
@@ -75,7 +121,7 @@ namespace FileCabinetGenerator
                 Console.WriteLine($"Invalid name of file, set to default: {fileFormats[defaultFileFormat][1]}");
             }
 
-            if(!fileName.EndsWith(fileFormats[chosenFileFormat][0]))
+            if (!fileName.EndsWith(fileFormats[chosenFileFormat][0]))
             {
                 fileName = fileFormats[chosenFileFormat][1];
                 Console.WriteLine($"Name of file should end with .{fileFormats[chosenFileFormat][0]}, changed to default: {fileFormats[chosenFileFormat][1]}");
@@ -154,7 +200,7 @@ namespace FileCabinetGenerator
         private static void SetAmountOfRecords(string argumentAmountOfRecords)
         {
             int parsedAmountOfRecords;
-            if(int.TryParse(argumentAmountOfRecords, out parsedAmountOfRecords))
+            if (int.TryParse(argumentAmountOfRecords, out parsedAmountOfRecords))
             {
                 recordsAmount = parsedAmountOfRecords;
             }
