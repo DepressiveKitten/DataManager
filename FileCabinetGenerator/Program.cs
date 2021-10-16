@@ -1,6 +1,7 @@
 ﻿using System;
 using FileCabinetApp;
 using System.IO;
+using System.Collections.Generic;
 
 namespace FileCabinetGenerator
 {
@@ -47,7 +48,8 @@ namespace FileCabinetGenerator
                 return;
             }
 
-
+            //List<FileCabinetRecord> recordsList = new List<FileCabinetRecord>();
+            //for(int i = 0; i < )
         }
 
         private static bool ValidateArguments()
@@ -132,24 +134,39 @@ namespace FileCabinetGenerator
             }
         }
 
-        private static void SetOutputType(string validationRules)
+        private static void SetOutputType(string fileFormat)
         {
+            var index = Array.FindIndex(fileFormats, i => i[0].Equals(fileFormat, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                System.Console.WriteLine($"{fileFormat} is not proper file format");
+                return;
+            }
 
+            chosenFileFormat = index;
         }
 
-        private static void SetOutputFile(string validationRules)
+        private static void SetOutputFile(string argumentFileName)
         {
-
+            fileName = argumentFileName;
         }
 
-        private static void SetAmountOfRecords(string validationRules)
+        private static void SetAmountOfRecords(string argumentAmountOfRecords)
         {
-
+            int parsedAmountOfRecords;
+            if(int.TryParse(argumentAmountOfRecords, out parsedAmountOfRecords))
+            {
+                recordsAmount = parsedAmountOfRecords;
+            }
         }
 
-        private static void SetStartingId(string validationRules)
+        private static void SetStartingId(string argumentStartingId)
         {
-
+            int parsedStartingId;
+            if (int.TryParse(argumentStartingId, out parsedStartingId))
+            {
+                startId = parsedStartingId;
+            }
         }
     }
 }
