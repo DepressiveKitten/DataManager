@@ -5,6 +5,14 @@ using System.Collections.Generic;
 
 namespace FileCabinetGenerator
 {
+    /// <summary>
+    /// Generates csv or xml files with random records.
+    /// Cmd arguments:
+    /// --output-type - xml or csv
+    /// --output - path to file
+    /// --records-amount
+    /// --start-id
+    /// </summary>
     public static class Program
     {
         private const int gradesAmount = (int)'Z' - (int)'A';
@@ -15,8 +23,6 @@ namespace FileCabinetGenerator
         private const int defaultStartId = 1;
         private const int defaultFileFormat = 1;
 
-        private static FileCabinetServiceSnapshot snapshot;
-        private static StreamWriter writer;
         private static string fileName = null;
         private static int recordsAmount = -1;
         private static int startId = -1;
@@ -46,8 +52,16 @@ namespace FileCabinetGenerator
             new Tuple<string, bool>("no", false),
         };
 
-
-        static void Main(string[] args)
+        /// <summary>
+        /// Generates csv or xml files with random records.
+        /// </summary>
+        /// <param name="args">
+        /// --output-type - xml or csv;
+        /// --output - path to file;
+        /// --records-amount;
+        /// --start-id.
+        /// </param>
+        public static void Main(string[] args)
         {
             ProcessCommandLineArgs(args);
             if (!ValidateArguments())
@@ -77,6 +91,30 @@ namespace FileCabinetGenerator
                     Height = (short)random.Next(minHeight, maxHeight),
                 };
                 recordsList.Add(record);
+            }
+
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(fileName))
+                {
+                    FileCabinetServiceSnapshot snapshot = new FileCabinetServiceSnapshot(recordsList.ToArray());
+                    switch (chosenFileFormat)
+                    {
+                        case 0:
+                            snapshot.SaveToCSV(writer);
+                            break;
+                        case 1:
+                            snapshot.SaveToXML(writer);
+                            break;
+                        default:
+                            System.Console.WriteLine("Failed to create file");
+                            return;
+                    }
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                System.Console.WriteLine("Failed to create file, no such directory");
             }
         }
 
