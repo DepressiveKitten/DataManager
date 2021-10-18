@@ -82,6 +82,18 @@ namespace FileCabinetApp
         }
 
         /// <summary>
+        /// Fill snapshot with records from xml document.
+        /// </summary>
+        /// <param name="reader">Stream to read records from.</param>
+        public void LoadFromXML(StreamReader reader)
+        {
+            FileCabinetRecordXmlReader xmlReader = new FileCabinetRecordXmlReader(reader);
+            IList<FileCabinetRecord> listOfReadedRecords = xmlReader.ReadAll();
+            this.records = new FileCabinetRecord[listOfReadedRecords.Count];
+            listOfReadedRecords.CopyTo(this.records, 0);
+        }
+
+        /// <summary>
         /// Gets the number of elements in snapshot.
         /// </summary>
         /// <returns>The number of elements in snapshot.</returns>

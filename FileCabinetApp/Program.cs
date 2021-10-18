@@ -598,6 +598,9 @@ namespace FileCabinetApp
                     case 0:
                         snapshot.LoadFromCSV(reader);
                         break;
+                    case 1:
+                        snapshot.LoadFromXML(reader);
+                        break;
                     default:
                         System.Console.WriteLine("Failed to import from file");
                         return;

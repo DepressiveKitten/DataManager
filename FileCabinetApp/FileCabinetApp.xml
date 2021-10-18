@@ -269,6 +269,11 @@
             Contains fields that associate with each record.
             </summary>
         </member>
+        <member name="M:FileCabinetApp.FileCabinetRecord.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecord"/> class.
+            </summary>
+        </member>
         <member name="P:FileCabinetApp.FileCabinetRecord.Id">
             <summary>
             Gets or sets the Id of the record.
@@ -351,6 +356,23 @@
             </summary>
             <param name="fileCabinetRecord">Record that should be added to document.</param>
         </member>
+        <member name="T:FileCabinetApp.FileCabinetRecordXmlReader">
+            <summary>
+            Reads records from xml documents.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlReader.#ctor(System.IO.TextReader)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecordXmlReader"/> class.
+            </summary>
+            <param name="reader">stream to read xml file from.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlReader.ReadAll">
+            <summary>
+            Read all records from document.
+            </summary>
+            <returns>Return all record.</returns>
+        </member>
         <member name="T:FileCabinetApp.FileCabinetRecordXmlWriter">
             <summary>
             Saves given records as xml documents.
@@ -410,6 +432,12 @@
         <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.LoadFromCSV(System.IO.StreamReader)">
             <summary>
             Fill snapshot with records from csv document.
+            </summary>
+            <param name="reader">Stream to read records from.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.LoadFromXML(System.IO.StreamReader)">
+            <summary>
+            Fill snapshot with records from xml document.
             </summary>
             <param name="reader">Stream to read records from.</param>
         </member>
