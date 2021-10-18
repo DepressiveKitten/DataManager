@@ -299,6 +299,29 @@
             </summary>
             <value>Date of birth of the person.</value>
         </member>
+        <member name="T:FileCabinetApp.FileCabinetRecordCsvReader">
+            <summary>
+            Reads records from csv documents.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvReader.#ctor(System.IO.TextReader)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecordCsvReader"/> class.
+            </summary>
+            <param name="reader">stream to read csv file from.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvReader.ReadAll">
+            <summary>
+            Read all records from document.
+            </summary>
+            <returns>Return all record.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvReader.Read">
+            <summary>
+            Read next record from document.
+            </summary>
+            <returns>Return next record or null if no records left.</returns>
+        </member>
         <member name="T:FileCabinetApp.FileCabinetRecordCsvWriter">
             <summary>
             Saves given records as csv documents.
@@ -349,6 +372,11 @@
             </summary>
             <param name="records">Records that should be saved in snapshot.</param>
         </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetServiceSnapshot"/> class.
+            </summary>
+        </member>
         <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.SaveToCSV(System.IO.StreamWriter)">
             <summary>
             Saves snapshot as csv document.
@@ -360,6 +388,18 @@
             Saves snapshot as xml document.
             </summary>
             <param name="writer">stream to save file to.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.LoadFromCSV(System.IO.StreamReader)">
+            <summary>
+            Fill snapshot with records from csv document.
+            </summary>
+            <param name="reader">Stream to read records from.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.Count">
+            <summary>
+            Gets the number of elements in snapshot.
+            </summary>
+            <returns>The number of elements in snapshot.</returns>
         </member>
         <member name="T:FileCabinetApp.IFileCabinetService">
             <summary>

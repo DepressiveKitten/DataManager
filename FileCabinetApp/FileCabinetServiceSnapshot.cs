@@ -10,7 +10,7 @@ namespace FileCabinetApp
     /// </summary>
     public class FileCabinetServiceSnapshot
     {
-        private readonly FileCabinetRecord[] records;
+        private FileCabinetRecord[] records;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCabinetServiceSnapshot"/> class.
@@ -19,6 +19,14 @@ namespace FileCabinetApp
         public FileCabinetServiceSnapshot(FileCabinetRecord[] records)
         {
             this.records = records;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileCabinetServiceSnapshot"/> class.
+        /// </summary>
+        public FileCabinetServiceSnapshot()
+        {
+            this.records = Array.Empty<FileCabinetRecord>();
         }
 
         /// <summary>
@@ -47,6 +55,27 @@ namespace FileCabinetApp
             }
 
             csvWriter.Save();
+        }
+
+        /// <summary>
+        /// Fill snapshot with records from csv document.
+        /// </summary>
+        /// <param name="reader">Stream to read records from.</param>
+        public void LoadFromCSV(StreamReader reader)
+        {
+            FileCabinetRecordCsvReader csvReader = new FileCabinetRecordCsvReader(reader);
+            IList<FileCabinetRecord> listOfReadedRecords = csvReader.ReadAll();
+            this.records = new FileCabinetRecord[listOfReadedRecords.Count];
+            listOfReadedRecords.CopyTo(this.records, 0);
+        }
+
+        /// <summary>
+        /// Gets the number of elements in snapshot.
+        /// </summary>
+        /// <returns>The number of elements in snapshot.</returns>
+        public int Count()
+        {
+            return this.records.Length;
         }
     }
 }
