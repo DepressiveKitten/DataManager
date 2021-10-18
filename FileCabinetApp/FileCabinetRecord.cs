@@ -1,12 +1,21 @@
 ﻿using System;
+using System.Xml.Serialization;
 
 namespace FileCabinetApp
 {
     /// <summary>
     /// Contains fields that associate with each record.
     /// </summary>
+    [Serializable]
     public class FileCabinetRecord
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileCabinetRecord"/> class.
+        /// </summary>
+        public FileCabinetRecord()
+        {
+        }
+
         /// <summary>
         /// Gets or sets the Id of the record.
         /// </summary>
@@ -47,6 +56,7 @@ namespace FileCabinetApp
         /// Gets or sets the date of birth of the person.
         /// </summary>
         /// <value>Date of birth of the person.</value>
+        [XmlElement(DataType = "date")]
         public DateTime DateOfBirth { get; set; }
     }
 }

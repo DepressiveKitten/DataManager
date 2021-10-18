@@ -12,6 +12,7 @@ namespace FileCabinetApp
     {
         private const string FileFormat = "Id,First Name,Last Name,Date of Birth,Height,Salary,Grade";
         private const string OutputDateFormat = "yyyy-MMM-d";
+        private const char Separator = '|';
         private readonly TextWriter textWriter;
 
         /// <summary>
@@ -41,12 +42,12 @@ namespace FileCabinetApp
                 throw new ArgumentNullException(nameof(fileCabinetRecord));
             }
 
-            this.textWriter.WriteLine($"{fileCabinetRecord.Id}," +
-                $"{fileCabinetRecord.FirstName}," +
-                $"{fileCabinetRecord.LastName}," +
-                $"{fileCabinetRecord.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo)}," +
-                $"{fileCabinetRecord.Height}," +
-                $"{fileCabinetRecord.Salary}," +
+            this.textWriter.WriteLine($"{fileCabinetRecord.Id}{Separator}" +
+                $"{fileCabinetRecord.FirstName}{Separator}" +
+                $"{fileCabinetRecord.LastName}{Separator}" +
+                $"{fileCabinetRecord.DateOfBirth.ToString(OutputDateFormat, DateTimeFormatInfo.InvariantInfo)}{Separator}" +
+                $"{fileCabinetRecord.Height}{Separator}" +
+                $"{fileCabinetRecord.Salary}{Separator}" +
                 $"{fileCabinetRecord.Grade}");
         }
     }

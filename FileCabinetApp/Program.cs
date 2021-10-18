@@ -70,6 +70,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("list", List),
             new Tuple<string, Action<string>>("find", Find),
             new Tuple<string, Action<string>>("export", Export),
+            new Tuple<string, Action<string>>("import", Import),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -82,6 +83,7 @@ namespace FileCabinetApp
             new string[] { "list", "show all records", "The 'list' command show all records." },
             new string[] { "find", "find record by parameters", "Type parametr you want to search for after 'find' command." },
             new string[] { "export", "export records to file", "Type export, then csv or xml, then path you want to save your data to" },
+            new string[] { "import", "import records from file", "Type import, then csv or xml, then path you want to load your data from" },
         };
 
         /// <summary>
@@ -560,6 +562,52 @@ namespace FileCabinetApp
             catch (DirectoryNotFoundException)
             {
                 System.Console.WriteLine("Failed to create file, no such directory");
+            }
+        }
+
+        private static void Import(string parameters)
+        {
+            var arguments = parameters.Split(' ', 2);
+
+            var fileTypeIndex = Array.FindIndex(fileFormats, i => i.Item1.Equals(arguments[0], StringComparison.OrdinalIgnoreCase));
+
+            if (fileTypeIndex < 0)
+            {
+                Console.WriteLine($"There is no such parameter as '{arguments[0]}'");
+                return;
+            }
+
+            if (arguments.Length < 2)
+            {
+                Console.WriteLine($"Your argument should follow '{arguments[0]}' param");
+                return;
+            }
+
+            if (!File.Exists(arguments[1]))
+            {
+                System.Console.WriteLine($"Import error: file {arguments[1]} is not exist.");
+                return;
+            }
+
+            using (StreamReader reader = File.OpenText(arguments[1]))
+            {
+                FileCabinetServiceSnapshot snapshot = new FileCabinetServiceSnapshot();
+
+                switch (fileTypeIndex)
+                {
+                    case 0:
+                        snapshot.LoadFromCSV(reader);
+                        break;
+                    case 1:
+                        snapshot.LoadFromXML(reader);
+                        break;
+                    default:
+                        System.Console.WriteLine("Failed to import from file");
+                        return;
+                }
+
+                System.Console.WriteLine($"{snapshot.Count()} records were imported from {arguments[1]}.");
+                fileCabinetService.Restore(snapshot);
             }
         }
 

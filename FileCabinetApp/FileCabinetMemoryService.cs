@@ -192,6 +192,56 @@ namespace FileCabinetApp
             return new FileCabinetServiceSnapshot(this.recordsList.ToArray());
         }
 
+        /// <summary>
+        /// Add all records from snapshot to service.
+        /// </summary>
+        /// <param name="snapshot">Snapshot to get records from.</param>
+        public void Restore(FileCabinetServiceSnapshot snapshot)
+        {
+            List<int> idlist = new List<int>();
+            foreach (FileCabinetRecord record in this.recordsList)
+            {
+                idlist.Add(record.Id);
+            }
+
+            if (snapshot is null)
+            {
+                return;
+            }
+
+            ReadOnlyCollection<FileCabinetRecord> shapshotRecords = snapshot.Records;
+            foreach (FileCabinetRecord record in shapshotRecords)
+            {
+                RecordParameterObject parameterObject = new RecordParameterObject()
+                {
+                    DateOfBirth = record.DateOfBirth,
+                    LastName = record.LastName,
+                    FirstName = record.FirstName,
+                    Grade = record.Grade,
+                    Height = record.Height,
+                    Salary = record.Salary,
+                };
+                try
+                {
+                    this.validator.ValidateParameters(parameterObject);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Validation in record {record.Id} failed: {ex.Message}");
+                    continue;
+                }
+
+                if (idlist.Contains(record.Id))
+                {
+                    this.EditRecord(record.Id, parameterObject);
+                }
+                else
+                {
+                    this.CreateRecord(parameterObject);
+                }
+            }
+        }
+
         private void AddByDateOfBirthToDictionary(DateTime dateOfBirth, FileCabinetRecord record)
         {
             if (this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
