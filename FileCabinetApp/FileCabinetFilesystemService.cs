@@ -222,7 +222,49 @@ namespace FileCabinetApp
         /// <param name="snapshot">Snapshot to get records from.</param>
         public void Restore(FileCabinetServiceSnapshot snapshot)
         {
-            throw new NotImplementedException();
+            List<int> idlist = new List<int>();
+            this.fileStream.Seek(IdOffsetInWrittenRecord, SeekOrigin.Begin);
+            for (int i = 0; i < this.fileStream.Length / LengthOfRecordInFile; i++, this.reader.ReadBytes(LengthOfRecordInFile - sizeof(int)))
+            {
+                idlist.Add(this.reader.ReadInt32());
+            }
+
+            if (snapshot is null)
+            {
+                return;
+            }
+
+            ReadOnlyCollection<FileCabinetRecord> shapshotRecords = snapshot.Records;
+            foreach (FileCabinetRecord record in shapshotRecords)
+            {
+                RecordParameterObject parameterObject = new RecordParameterObject()
+                {
+                    DateOfBirth = record.DateOfBirth,
+                    LastName = record.LastName,
+                    FirstName = record.FirstName,
+                    Grade = record.Grade,
+                    Height = record.Height,
+                    Salary = record.Salary,
+                };
+                try
+                {
+                    this.validator.ValidateParameters(parameterObject);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Validation in record {record.Id} failed: {ex.Message}");
+                    continue;
+                }
+
+                if (idlist.Contains(record.Id))
+                {
+                    this.EditRecord(record.Id, parameterObject);
+                }
+                else
+                {
+                    this.CreateRecord(parameterObject);
+                }
+            }
         }
 
         /// <summary>
