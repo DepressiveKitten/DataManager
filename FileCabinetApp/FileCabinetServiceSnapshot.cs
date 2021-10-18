@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Xml;
 
 namespace FileCabinetApp
 {
@@ -27,6 +27,18 @@ namespace FileCabinetApp
         public FileCabinetServiceSnapshot()
         {
             this.records = Array.Empty<FileCabinetRecord>();
+        }
+
+        /// <summary>
+        /// Gets records from snapshot.
+        /// </summary>
+        /// <value>records in snapshot.</value>
+        public ReadOnlyCollection<FileCabinetRecord> Records
+        {
+            get
+            {
+                return Array.AsReadOnly<FileCabinetRecord>(this.records);
+            }
         }
 
         /// <summary>

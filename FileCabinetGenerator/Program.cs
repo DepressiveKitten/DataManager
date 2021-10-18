@@ -19,7 +19,7 @@ namespace FileCabinetGenerator
         private const int minHeight = 100;
         private const int maxHeight = 220;
 
-        private const int defaultRecordsAmount = 100;
+        private const int defaultRecordsAmount = 5000;
         private const int defaultStartId = 1;
         private const int defaultFileFormat = 1;
 

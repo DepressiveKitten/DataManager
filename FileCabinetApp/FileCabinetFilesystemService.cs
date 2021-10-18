@@ -217,6 +217,15 @@ namespace FileCabinetApp
         }
 
         /// <summary>
+        /// Add all records from snapshot to service.
+        /// </summary>
+        /// <param name="snapshot">Snapshot to get records from.</param>
+        public void Restore(FileCabinetServiceSnapshot snapshot)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Dispose object resourses.
         /// </summary>
         public void Dispose()

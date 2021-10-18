@@ -10,7 +10,7 @@ namespace FileCabinetApp
     /// </summary>
     public class FileCabinetRecordCsvReader
     {
-        private const char Separator = ',';
+        private const char Separator = '|';
         private readonly TextReader textReader;
 
         /// <summary>

@@ -604,6 +604,7 @@ namespace FileCabinetApp
                 }
 
                 System.Console.WriteLine($"{snapshot.Count()} records were imported from {arguments[1]}.");
+                fileCabinetService.Restore(snapshot);
             }
         }
 

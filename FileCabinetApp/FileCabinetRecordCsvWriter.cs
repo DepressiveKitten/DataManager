@@ -12,7 +12,7 @@ namespace FileCabinetApp
     {
         private const string FileFormat = "Id,First Name,Last Name,Date of Birth,Height,Salary,Grade";
         private const string OutputDateFormat = "yyyy-MMM-d";
-        private const char Separator = ',';
+        private const char Separator = '|';
         private readonly TextWriter textWriter;
 
         /// <summary>
